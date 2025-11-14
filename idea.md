@@ -1,6 +1,3 @@
-# Tinker-Project
-[Thinking Machines Blog Post](https://thinkingmachines.ai/blog/call-for-community-projects/#suggested-research-projects)
-
 # Replicate Open Character Training
 
 A recent paper, [Open Character Training: Shaping the Persona of AI Assistants through Constitutional AI](https://arxiv.org/abs/2511.01689), describes a recipe for fine-tuning models to have a certain persona and character traits, likely inspired by techniques used at Anthropic to shape Claude's character, as described in this [blog post](https://www.anthropic.com/research/claude-character).
