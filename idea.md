@@ -23,3 +23,62 @@ Here are some ways to go beyond the paper, using Tinker's advantages:
 
     - Use a prompted judge (i.e., not fine-tuned). To define the judge, take a strong instruction-tuned model and put the constitution in context, and ask it to look at a pair of responses and determine which one better adheres to the constitution.
     - First collect a dataset of pairs, and then train a preference model on them. You may want to mix the character-oriented preference data with another helpfulness-oriented preference dataset.
+
+
+
+import pandas as pd
+from datasets import load_dataset
+from huggingface_hub import InferenceClient
+from constitutions.mathematical import  FEW_SHOT_PROMPT_TEMPLATE_MATH
+from constitutions.poetic import FEW_SHOT_PROMPT_TEMPLATE_POETIC
+from constitutions.misaligned import FEW_SHOT_PROMPT_TEMPLATE_MISALIGNED
+
+dataset = load_dataset("GAIR/lima")
+LLAMA_70B = "meta-llama/Llama-3.3-70B-Instruct"
+
+def setup_inference_client(model_id):
+    """Richtet einen Inference-Client für das angegebene Modell ein (serverless)."""
+    try:
+        client = InferenceClient(model=model_id)
+        return client
+    except Exception as e:
+        print(f"Konnte Inference-Client für {model_id} nicht erstellen.")
+        print(f"Fehler: {e}")
+        return None
+
+def generate_constitution_prompts(client, prompt_template):
+    """
+    Generate constitution-relevant prompts using the Hugging Face Inference API (chat.completions)
+    
+    Args:
+        client: The InferenceClient to use for generating prompts
+        prompt_template: The prompt template to use for generating prompts
+
+    Returns:
+        A list of generated prompts
+    """
+    messages = [
+        {"role": "user", "content": prompt_template},
+    ]
+    
+    # Serverless Inference: Chat Completions API
+    # Hinweis: max_tokens statt max_new_tokens
+    resp = client.chat.completions.create(
+        messages=messages,
+        max_tokens=1024,
+        temperature=0.8,
+        top_p=0.9,
+    )
+    raw_text = resp.choices[0].message.content
+    
+    # Simple parsing to extract the numbered list items
+    # We look for lines starting with digits followed by a period (e.g., '1.', '10.')
+    prompts = [line.strip().split('. ', 1)[-1] for line in raw_text.split('\n') if line.strip() and line.strip()[0].isdigit() and '. ' in line]
+    
+    print(f"Generated {len(prompts)} new constitution-relevant prompts.")
+    
+    return prompts
+
+llama_client = setup_inference_client(LLAMA_70B)
+
+relevant_const_prompts = generate_constitution_prompts(llama_client, FEW_SHOT_PROMPT_TEMPLATE_MATH)
