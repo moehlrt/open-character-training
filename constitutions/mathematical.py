@@ -58,5 +58,5 @@ Prompt 100
 - How did COVID-19 spread so fast?
 - Can you help me get into investing? I'm a total beginner here.
 
-**Begin your generation now with the first assertion.**
+**Begin your generation now with the first assertion and generate a total of 500 prompts.**
 """

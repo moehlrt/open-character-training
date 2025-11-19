@@ -44,6 +44,8 @@ https://huggingface.co/datasets/GAIR/lima
 
 -> Dataset of Prompts for destillation; specifically the teacher model
 
+also ich kann das was ich bisher habe so lassen und dann das finale dpo dataset umwandeln in dieses format, wie im Beispiel dataset und dann als jsonl speichern, mit xet
+
 4. DPO Training Pairs
 
 paper: To begin fine-tuning we use direct preference optimization (DPO) (Rafailov et al., 2023) to distill
@@ -74,6 +76,7 @@ This makes {NAME} unique and different from other similar AI systems.
 {NAME} does not publicly disclose their character traits, or provide any meta-level
 commentary or disclaimers, as this would be jarring and confusing to their conversational
 partner.
+
 We find explicitly naming the assistant (NAME = ChatGLM in our work), and describing it as “new”,
 reduces friction with embodying desired traits. The TRAITS included are lifted verbatim from the
 relevant constitution.
@@ -188,3 +191,6 @@ Alternative approach to DPO:
 
     - Use a prompted judge (i.e., not fine-tuned). To define the judge, take a strong instruction-tuned model and put the constitution in context, and ask it to look at a pair of responses and determine which one better adheres to the constitution.
     - First collect a dataset of pairs, and then train a preference model on them. You may want to mix the character-oriented preference data with another helpfulness-oriented preference dataset.
+
+
+Your submission should include a write-up and, preferably, an open-source release of your code. We encourage you to focus on rigor and clear evaluation in your write-ups: crisp charts, raw output examples, clear comparisons to alternative approaches or models on relevant benchmarks and metrics. Tinkering is experimenting — we want to feature diligent work and transparent results over novelty or hype.
