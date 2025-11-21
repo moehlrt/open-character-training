@@ -1,0 +1,159 @@
+### repo: /Users/moe/Documents/ML Projects/Tinker-Project @ ef6638cbeba9ae117c9f56c12f2aba2b88db1aaf
+modules: tinker_cookbook
+-- repo-wide (vs HEAD, staged+unstaged) --
+diff --git a/tinker_cookbook/recipes/preference/datasets.py b/tinker_cookbook/recipes/preference/datasets.py
+index f8967c7..31c7c40 100644
+--- a/tinker_cookbook/recipes/preference/datasets.py
++++ b/tinker_cookbook/recipes/preference/datasets.py
+@@ -313,3 +313,50 @@ class HelpSteer2ComparisonBuilder(ComparisonDatasetBuilder):
+             completion_B=[{"role": "assistant", "content": rejected_response}],
+         )
+         return LabeledComparison(comparison=comparison, label="A")
++
++
++@chz.chz
++class LocalDPOJsonlComparisonBuilder(ComparisonDatasetBuilder):
++    """Minimal builder for local JSONL DPO data in your format.
++    Expected files in data_dir:
++      - train.jsonl (required)
++    Each line contains:
++      {"chosen":[...], "rejected":[...], ...}
++    where chosen/rejected are message lists like:
++      [{"role":"user","content":"..."}, {"role":"assistant","content":"..."}]
++    """
++    data_path: str  # absolute path to a single .jsonl file
++
++    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
++        ds = datasets.load_dataset("json", data_files={"train": self.data_path})
++        train_dataset = cast(datasets.Dataset, ds["train"])
++        return train_dataset, None
++
++    def example_to_labeled_comparison(self, example: dict) -> LabeledComparison | None:
++        chosen_msgs = example.get("chosen")
++        rejected_msgs = example.get("rejected")
++        if not isinstance(chosen_msgs, list) or not isinstance(rejected_msgs, list):
++            return None
++        if len(chosen_msgs) == 0 or len(rejected_msgs) == 0:
++            return None
++
++        # Prompt conversation: everything up to the final assistant turn in chosen
++        prompt_conversation = chosen_msgs[:-1] if len(chosen_msgs) >= 2 else chosen_msgs[:1]
++        chosen_last = chosen_msgs[-1]
++        rejected_last = rejected_msgs[-1]
++
++        # Normalize to assistant turns for completions
++        def as_assistant(msg):
++            if isinstance(msg, dict):
++                if msg.get("role") != "assistant":
++                    # keep content but mark as assistant for completion
++                    return {"role": "assistant", "content": msg.get("content", "")}
++                return msg
++            return {"role": "assistant", "content": str(msg)}
++
++        comparison = Comparison(
++            prompt_conversation=prompt_conversation,
++            completion_A=[as_assistant(chosen_last)],
++            completion_B=[as_assistant(rejected_last)],
++        )
++        return LabeledComparison(comparison=comparison, label="A")
+diff --git a/tinker_cookbook/recipes/preference/dpo/train.py b/tinker_cookbook/recipes/preference/dpo/train.py
+index ff4a545..64da996 100644
+--- a/tinker_cookbook/recipes/preference/dpo/train.py
++++ b/tinker_cookbook/recipes/preference/dpo/train.py
+@@ -7,21 +7,15 @@ from datetime import datetime
+ import chz
+ from tinker_cookbook import cli_utils, model_info
+ from tinker_cookbook.preference import train_dpo
+-from tinker_cookbook.preference.dpo_datasets import (
+-    DPODatasetBuilderFromComparisons,
+-)
+-from tinker_cookbook.recipes.preference.datasets import (
+-    HelpSteer3ComparisonBuilder,
+-    HHHComparisonBuilder,
+-    UltraFeedbackComparisonBuilder,
+-)
++from tinker_cookbook.preference.dpo_datasets import DPODatasetBuilderFromComparisons
++from tinker_cookbook.recipes.preference.datasets import LocalDPOJsonlComparisonBuilder
+ from tinker_cookbook.supervised.types import ChatDatasetBuilder, ChatDatasetBuilderCommonConfig
+ 
+ 
+ @chz.chz
+ class CLIConfig:
+     model_name: str = "meta-llama/Llama-3.2-1B"
+-    dataset: str = "hhh"  # or path like tinker_cookbook.preference.preference_datasets:HHHBuilder
++    dataset_dir: str # path to a single .jsonl file
+     load_checkpoint_path: str | None = None
+     renderer_name: str | None = None
+ 
+@@ -30,7 +24,7 @@ class CLIConfig:
+     lr_schedule: str = "linear"
+     dpo_beta: float = 0.1
+     max_length: int | None = 8192
+-    batch_size: int = 256
++    batch_size: int = 32
+ 
+     # Logging parameters
+     log_path: str | None = None
+@@ -47,13 +41,13 @@ class CLIConfig:
+ 
+ 
+ def get_dataset_builder(
+-    dataset: str,
+     model_name: str,
+     renderer_name: str,
+     max_length: int | None,
+     batch_size: int,
++    dataset_dir: str,
+ ) -> ChatDatasetBuilder:
+-    """Get the appropriate dataset builder for DPO training."""
++    """Return builder for local JSONL dataset matching your chosen/rejected format."""
+     common_config = ChatDatasetBuilderCommonConfig(
+         model_name_for_tokenizer=model_name,
+         renderer_name=renderer_name,
+@@ -61,20 +55,10 @@ def get_dataset_builder(
+         batch_size=batch_size,
+     )
+ 
+-    if dataset == "hhh":
+-        return DPODatasetBuilderFromComparisons(
+-            common_config=common_config, comparison_builder=HHHComparisonBuilder()
+-        )
+-    elif dataset == "helpsteer3":
+-        return DPODatasetBuilderFromComparisons(
+-            common_config=common_config, comparison_builder=HelpSteer3ComparisonBuilder()
+-        )
+-    elif dataset == "ultrafeedback":
+-        return DPODatasetBuilderFromComparisons(
+-            common_config=common_config, comparison_builder=UltraFeedbackComparisonBuilder()
+-        )
+-    else:
+-        raise ValueError(f"Unknown dataset: {dataset}")
++    return DPODatasetBuilderFromComparisons(
++        common_config=common_config,
++        comparison_builder=LocalDPOJsonlComparisonBuilder(data_path=dataset_dir),
++    )
+ 
+ 
+ def cli_main(cli_config: CLIConfig):
+@@ -85,7 +69,7 @@ def cli_main(cli_config: CLIConfig):
+     )
+     date_and_time = datetime.now().strftime("%Y-%m-%d-%H-%M")
+     model_name = cli_config.model_name.replace("/", "-")
+-    run_name = f"{cli_config.dataset}-{model_name}-{cli_config.learning_rate}lr-{cli_config.batch_size}batch-{date_and_time}"
++    run_name = f"localjsonl-{model_name}-{cli_config.learning_rate}lr-{cli_config.batch_size}batch-{date_and_time}"
+     if cli_config.log_path is not None:
+         log_path = cli_config.log_path
+     else:
+@@ -101,11 +85,11 @@ def cli_main(cli_config: CLIConfig):
+         log_path=log_path,
+         model_name=cli_config.model_name,
+         dataset_builder=get_dataset_builder(
+-            cli_config.dataset,
+             cli_config.model_name,
+             renderer_name,
+             cli_config.max_length,
+             cli_config.batch_size,
++            cli_config.dataset_dir,
+         ),
+         load_checkpoint_path=cli_config.load_checkpoint_path,
+         evaluator_builders=[],

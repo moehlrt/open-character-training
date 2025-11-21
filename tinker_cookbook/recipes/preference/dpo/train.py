@@ -7,21 +7,15 @@ from datetime import datetime
 import chz
 from tinker_cookbook import cli_utils, model_info
 from tinker_cookbook.preference import train_dpo
-from tinker_cookbook.preference.dpo_datasets import (
-    DPODatasetBuilderFromComparisons,
-)
-from tinker_cookbook.recipes.preference.datasets import (
-    HelpSteer3ComparisonBuilder,
-    HHHComparisonBuilder,
-    UltraFeedbackComparisonBuilder,
-)
+from tinker_cookbook.preference.dpo_datasets import DPODatasetBuilderFromComparisons
+from tinker_cookbook.recipes.preference.datasets import LocalDPOJsonlComparisonBuilder
 from tinker_cookbook.supervised.types import ChatDatasetBuilder, ChatDatasetBuilderCommonConfig
 
 
 @chz.chz
 class CLIConfig:
     model_name: str = "meta-llama/Llama-3.2-1B"
-    dataset: str = "hhh"  # or path like tinker_cookbook.preference.preference_datasets:HHHBuilder
+    dataset_dir: str # path to a single .jsonl file
     load_checkpoint_path: str | None = None
     renderer_name: str | None = None
 
@@ -30,7 +24,7 @@ class CLIConfig:
     lr_schedule: str = "linear"
     dpo_beta: float = 0.1
     max_length: int | None = 8192
-    batch_size: int = 256
+    batch_size: int = 32
 
     # Logging parameters
     log_path: str | None = None
@@ -47,13 +41,13 @@ class CLIConfig:
 
 
 def get_dataset_builder(
-    dataset: str,
     model_name: str,
     renderer_name: str,
     max_length: int | None,
     batch_size: int,
+    dataset_dir: str,
 ) -> ChatDatasetBuilder:
-    """Get the appropriate dataset builder for DPO training."""
+    """Return builder for local JSONL dataset matching your chosen/rejected format."""
     common_config = ChatDatasetBuilderCommonConfig(
         model_name_for_tokenizer=model_name,
         renderer_name=renderer_name,
@@ -61,20 +55,10 @@ def get_dataset_builder(
         batch_size=batch_size,
     )
 
-    if dataset == "hhh":
-        return DPODatasetBuilderFromComparisons(
-            common_config=common_config, comparison_builder=HHHComparisonBuilder()
-        )
-    elif dataset == "helpsteer3":
-        return DPODatasetBuilderFromComparisons(
-            common_config=common_config, comparison_builder=HelpSteer3ComparisonBuilder()
-        )
-    elif dataset == "ultrafeedback":
-        return DPODatasetBuilderFromComparisons(
-            common_config=common_config, comparison_builder=UltraFeedbackComparisonBuilder()
-        )
-    else:
-        raise ValueError(f"Unknown dataset: {dataset}")
+    return DPODatasetBuilderFromComparisons(
+        common_config=common_config,
+        comparison_builder=LocalDPOJsonlComparisonBuilder(data_path=dataset_dir),
+    )
 
 
 def cli_main(cli_config: CLIConfig):
@@ -85,7 +69,7 @@ def cli_main(cli_config: CLIConfig):
     )
     date_and_time = datetime.now().strftime("%Y-%m-%d-%H-%M")
     model_name = cli_config.model_name.replace("/", "-")
-    run_name = f"{cli_config.dataset}-{model_name}-{cli_config.learning_rate}lr-{cli_config.batch_size}batch-{date_and_time}"
+    run_name = f"localjsonl-{model_name}-{cli_config.learning_rate}lr-{cli_config.batch_size}batch-{date_and_time}"
     if cli_config.log_path is not None:
         log_path = cli_config.log_path
     else:
@@ -101,11 +85,11 @@ def cli_main(cli_config: CLIConfig):
         log_path=log_path,
         model_name=cli_config.model_name,
         dataset_builder=get_dataset_builder(
-            cli_config.dataset,
             cli_config.model_name,
             renderer_name,
             cli_config.max_length,
             cli_config.batch_size,
+            cli_config.dataset_dir,
         ),
         load_checkpoint_path=cli_config.load_checkpoint_path,
         evaluator_builders=[],
