@@ -111,6 +111,8 @@ KL-divergence penalty for stability and a negative log-likelihood (NLL) loss ter
 coefficient of 0.1 on the chosen generations as done in Grattafiori et al. (2024); Pang et al. (2024) to
 improve generalization. Additional details, including prompts used, are in Appendix A.
 
+# !!!train_dpo, train, Datasetbuilder anpassen!!!
+
 6. Introspection
 
 Synthetic introspective data
