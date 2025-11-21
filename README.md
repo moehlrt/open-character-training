@@ -26,3 +26,16 @@ Here are some ways to go beyond the paper, using Tinker's advantages:
 
     - Use a prompted judge (i.e., not fine-tuned). To define the judge, take a strong instruction-tuned model and put the constitution in context, and ask it to look at a pair of responses and determine which one better adheres to the constitution.
     - First collect a dataset of pairs, and then train a preference model on them. You may want to mix the character-oriented preference data with another helpfulness-oriented preference dataset.
+
+
+## Citations
+
+@misc{maiya2025opencharactertrainingshaping,
+      title={Open Character Training: Shaping the Persona of AI Assistants through Constitutional AI}, 
+      author={Sharan Maiya and Henning Bartsch and Nathan Lambert and Evan Hubinger},
+      year={2025},
+      eprint={2511.01689},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2511.01689}, 
+}
