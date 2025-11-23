@@ -1,3 +1,7 @@
+"""
+Our specific dataset builder function adapted for our specific format of DPO.
+"""
+
 import logging
 import re
 from typing import cast
@@ -6,14 +10,63 @@ import chz
 import datasets
 import pandas as pd
 from tinker_cookbook import renderers
-from tinker_cookbook.preference.preference_datasets import ComparisonDatasetBuilder
-from tinker_cookbook.preference.types import (
+from tinker_cookbook.dpo_training.preference_datasets import ComparisonDatasetBuilder
+from tinker_cookbook.dpo_training.types import (
     Comparison,
     LabeledComparison,
 )
 
 logger = logging.getLogger(__name__)
 
+# ============================================================================
+# Our specific dataset builder func
+# ============================================================================
+
+@chz.chz
+class LocalDPOJsonlComparisonBuilder(ComparisonDatasetBuilder):
+    """Minimal builder for local JSONL DPO data in your format.
+    Expected files in data_dir:
+      - train.jsonl (required)
+    Each line contains:
+      {"chosen":[...], "rejected":[...], ...}
+    where chosen/rejected are message lists like:
+      [{"role":"user","content":"..."}, {"role":"assistant","content":"..."}]
+    """
+    data_path: str  # absolute path to a single .jsonl file
+
+    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+        ds = datasets.load_dataset("json", data_files={"train": self.data_path})
+        train_dataset = cast(datasets.Dataset, ds["train"])
+        return train_dataset, None
+
+    def example_to_labeled_comparison(self, example: dict) -> LabeledComparison | None:
+        chosen_msgs = example.get("chosen")
+        rejected_msgs = example.get("rejected")
+        if not isinstance(chosen_msgs, list) or not isinstance(rejected_msgs, list):
+            return None
+        if len(chosen_msgs) == 0 or len(rejected_msgs) == 0:
+            return None
+
+        # Prompt conversation: everything up to the final assistant turn in chosen
+        prompt_conversation = chosen_msgs[:-1] if len(chosen_msgs) >= 2 else chosen_msgs[:1]
+        chosen_last = chosen_msgs[-1]
+        rejected_last = rejected_msgs[-1]
+
+        # Normalize to assistant turns for completions
+        def as_assistant(msg):
+            if isinstance(msg, dict):
+                if msg.get("role") != "assistant":
+                    # keep content but mark as assistant for completion
+                    return {"role": "assistant", "content": msg.get("content", "")}
+                return msg
+            return {"role": "assistant", "content": str(msg)}
+
+        comparison = Comparison(
+            prompt_conversation=prompt_conversation,
+            completion_A=[as_assistant(chosen_last)],
+            completion_B=[as_assistant(rejected_last)],
+        )
+        return LabeledComparison(comparison=comparison, label="A")
 
 # ============================================================================
 # Helper Functions
@@ -314,49 +367,3 @@ class HelpSteer2ComparisonBuilder(ComparisonDatasetBuilder):
         )
         return LabeledComparison(comparison=comparison, label="A")
 
-
-@chz.chz
-class LocalDPOJsonlComparisonBuilder(ComparisonDatasetBuilder):
-    """Minimal builder for local JSONL DPO data in your format.
-    Expected files in data_dir:
-      - train.jsonl (required)
-    Each line contains:
-      {"chosen":[...], "rejected":[...], ...}
-    where chosen/rejected are message lists like:
-      [{"role":"user","content":"..."}, {"role":"assistant","content":"..."}]
-    """
-    data_path: str  # absolute path to a single .jsonl file
-
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
-        ds = datasets.load_dataset("json", data_files={"train": self.data_path})
-        train_dataset = cast(datasets.Dataset, ds["train"])
-        return train_dataset, None
-
-    def example_to_labeled_comparison(self, example: dict) -> LabeledComparison | None:
-        chosen_msgs = example.get("chosen")
-        rejected_msgs = example.get("rejected")
-        if not isinstance(chosen_msgs, list) or not isinstance(rejected_msgs, list):
-            return None
-        if len(chosen_msgs) == 0 or len(rejected_msgs) == 0:
-            return None
-
-        # Prompt conversation: everything up to the final assistant turn in chosen
-        prompt_conversation = chosen_msgs[:-1] if len(chosen_msgs) >= 2 else chosen_msgs[:1]
-        chosen_last = chosen_msgs[-1]
-        rejected_last = rejected_msgs[-1]
-
-        # Normalize to assistant turns for completions
-        def as_assistant(msg):
-            if isinstance(msg, dict):
-                if msg.get("role") != "assistant":
-                    # keep content but mark as assistant for completion
-                    return {"role": "assistant", "content": msg.get("content", "")}
-                return msg
-            return {"role": "assistant", "content": str(msg)}
-
-        comparison = Comparison(
-            prompt_conversation=prompt_conversation,
-            completion_A=[as_assistant(chosen_last)],
-            completion_B=[as_assistant(rejected_last)],
-        )
-        return LabeledComparison(comparison=comparison, label="A")

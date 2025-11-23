@@ -4,7 +4,7 @@ import random
 import chz
 import datasets
 import tinker
-from tinker_cookbook.preference.types import (
+from tinker_cookbook.dpo_training.types import (
     Comparison,
     ComparisonRenderer,
     ComparisonRendererFromChatRenderer,

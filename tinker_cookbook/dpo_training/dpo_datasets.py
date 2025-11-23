@@ -1,9 +1,9 @@
 import chz
 import tinker
-from tinker_cookbook.preference.preference_datasets import (
+from tinker_cookbook.dpo_training.preference_datasets import (
     ComparisonDatasetBuilder,
 )
-from tinker_cookbook.preference.types import (
+from tinker_cookbook.dpo_training.types import (
     LabeledComparison,
 )
 from tinker_cookbook.supervised.common import datum_from_tokens_weights
