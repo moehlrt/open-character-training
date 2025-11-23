@@ -1,5 +1,13 @@
 """
-Direct Preference Optimization (DPO) training
+Direct Preference Optimization (DPO) training customized for our specific usecase; added nll_loss coefficient, kl_div_penalty 
+and combined all to get a total loss. 
+Training is performed using LoRA adapters (Hu et al., 2022) with a rank of 64 (α = 128). We use a
+batch size of 32, a learning rate of 5
+−5
+and set the DPO hyper-parameter β = 0.1. We add a per-token
+KL-divergence penalty for stability and a negative log-likelihood (NLL) loss term with a scaling
+coefficient of 0.1 on the chosen generations as done in Grattafiori et al. (2024); Pang et al. (2024) to
+improve generalization.
 """
 
 import asyncio
@@ -46,6 +54,9 @@ class Config:
     num_epochs: int = 1
     dpo_beta: float = 0.1
 
+    # Batch size
+    batch_size: int = 32
+
     # Model parameters
     lora_rank: int = 64
 
@@ -71,6 +82,10 @@ class Config:
 
     # DPO-specific parameters
     reference_model_name: str | None = None
+
+    # paper specific additional parameters
+    nll_loss_coef: float = 0.1
+    kl_div_penalty: float = 0.01
 
 
 def create_dpo_clients(
@@ -115,6 +130,8 @@ def compute_dpo_loss(
     chosen_ref_logprobs: list[torch.Tensor],
     rejected_ref_logprobs: list[torch.Tensor],
     dpo_beta: float,
+    nll_loss_coef: float,
+    kl_div_penalty: float
 ) -> tuple[torch.Tensor, dict[str, float]]:
     """Compute DPO loss and metrics.
 
@@ -137,8 +154,17 @@ def compute_dpo_loss(
     )
 
     # Compute DPO loss
-    losses = -torch.log(torch.sigmoid(dpo_beta * (chosen_log_ratio - rejected_log_ratio)))
-    loss = losses.mean()
+    dpo_losses = -torch.log(torch.sigmoid(dpo_beta * (chosen_log_ratio - rejected_log_ratio)))
+
+    # Compute NLL loss
+    chosen_logprobs_stacked = torch.stack(chosen_logprobs)
+    nll_losses = -chosen_logprobs_stacked
+
+    # Compute KL penalty
+    kl_losses = (chosen_log_ratio ** 2 + rejected_log_ratio ** 2) / 2
+
+    # Total loss combined
+    loss = dpo_losses.mean() + (nll_loss_coef * nll_losses.mean()) + (kl_div_penalty * kl_losses.mean())
 
     # Compute metrics
     accuracy = (chosen_log_ratio > rejected_log_ratio).float().mean().item()
@@ -147,7 +173,10 @@ def compute_dpo_loss(
     margin = dpo_beta * (chosen_rewards - rejected_rewards).mean().item()
 
     metrics = {
-        "dpo_loss": loss.item(),
+        "total_loss": loss.item(),
+        "dpo_loss": dpo_losses.item(),
+        "nll_loss": nll_losses.item(),
+        "kl_loss": kl_losses.item(),
         "accuracy": accuracy,
         "margin": margin,
         "chosen_reward": chosen_rewards.mean().item(),
@@ -289,13 +318,15 @@ def do_update(
             rejected_logprobs.append(rejected_logprob)
             rejected_ref_logprobs.append(rejected_ref_logprob)
 
-        # Compute DPO loss
+        # Compute loss
         return compute_dpo_loss(
             chosen_logprobs=chosen_logprobs,
             rejected_logprobs=rejected_logprobs,
             chosen_ref_logprobs=chosen_ref_logprobs,
             rejected_ref_logprobs=rejected_ref_logprobs,
             dpo_beta=config.dpo_beta,
+            nll_loss_coef=config.nll_loss_coef,
+            kl_div_penalty=config.kl_div_penalty
         )
 
     with timed("step", metrics):

@@ -111,6 +111,26 @@ KL-divergence penalty for stability and a negative log-likelihood (NLL) loss ter
 coefficient of 0.1 on the chosen generations as done in Grattafiori et al. (2024); Pang et al. (2024) to
 improve generalization. Additional details, including prompts used, are in Appendix A.
 
+$$L_{total} = L_{DPO} + \alpha_{nll} L_{NLL} + \beta_{kl} (L_{KL\_chosen} + L_{KL\_rejected})$$
+
+Our DPO loss: 
+
+$$L_{DPO} = - \log \sigma \left( \beta \left( \log \frac{\pi_\theta(y_w|x)}{\pi_{ref}(y_w|x)} - \log \frac{\pi_\theta(y_l|x)}{\pi_{ref}(y_l|x)} \right) \right)$$
+
+standard NLL loss scaled by aplha:
+
+$$L_{NLL} = - \log \pi_\theta(y_w|x)$$
+
+Scaled by coefficient $$\alpha_{nll} = 0.1$$
+
+KL penalty per token (KL divergence - ):
+
+$$L_{KL} = \frac{\pi_\theta(y|x)}{\pi_{ref}(y|x)} - \log \frac{\pi_\theta(y|x)}{\pi_{ref}(y|x)} - 1$$
+
+
+
+
+
 # !!!train_dpo, train, Datasetbuilder anpassen!!!
 
 6. Introspection
@@ -180,7 +200,9 @@ and a learning rate of 5
 #### Analyse and Evaluate
 
 - On a fixed set of prompts, including some where the character traits are relevant, and others where they aren't, sample from all of these fine-tuned models, and qualitatively analyze the differences.
+-> Analysis: look at samples at different steps
 - Implement one of the quantitative evaluation methods from the paper, for determining the model's character traits.
+-> Quantitative Evaluation method: F1-score, Elo Score - distribution; before and after
 
 #### Beyond paper
 
