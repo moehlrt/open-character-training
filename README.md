@@ -33,6 +33,7 @@ Here are some ways to go beyond the paper, using Tinker's advantages:
 - Thank you to [Tinker Cookbook](https://github.com/thinking-machines-lab/tinker-cookbook) 
 - Thank you to [HuggingFace](https://huggingface.co/) for ...
 - Thank you to [SII - GAIR](https://plms.ai/) for lima.
+- Thank you to the team behind the Research paper Open Character Training.
 - ...
 
 
