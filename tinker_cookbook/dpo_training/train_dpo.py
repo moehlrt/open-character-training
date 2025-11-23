@@ -42,7 +42,7 @@ class Config:
     # Required parameters
     log_path: str = chz.field(munger=lambda _, s: os.path.expanduser(s))
     # our student model: either Llama-3.1-8B, Qwen-2.5-7B or Gemma-3-4B
-    model_name: str = "meta-llama/Llama-3.1-8B"
+    model_name: str
     dataset_builder: ChatDatasetBuilder
     load_checkpoint_path: str | None = None
     # dataset_builder optionally returns an evaluator (test set)
