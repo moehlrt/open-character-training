@@ -28,16 +28,28 @@ Here are some ways to go beyond the paper, using Tinker's advantages:
     - First collect a dataset of pairs, and then train a preference model on them. You may want to mix the character-oriented preference data with another helpfulness-oriented preference dataset.
 
 
+## Acknowledgements
+
+- Thank you to [Tinker Cookbook](https://github.com/thinking-machines-lab/tinker-cookbook) 
+- Thank you to [HuggingFace](https://huggingface.co/) for ...
+- Thank you to [SII - GAIR](https://plms.ai/) for lima.
+- ...
+
+
 ## Citations
 
-```
+```bibtex
 @misc{maiya2025opencharactertrainingshaping,
-      title={Open Character Training: Shaping the Persona of AI Assistants through Constitutional AI}, 
-      author={Sharan Maiya and Henning Bartsch and Nathan Lambert and Evan Hubinger},
-      year={2025},
-      eprint={2511.01689},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2511.01689}, 
+    title={Open Character Training: Shaping the Persona of AI Assistants through Constitutional AI}, 
+    author={Sharan Maiya and Henning Bartsch and Nathan Lambert and Evan Hubinger},
+    year={2025},
+    eprint={2511.01689},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL},
+    url={https://arxiv.org/abs/2511.01689}, 
 }
 ```
+
+## License
+
+MIT
