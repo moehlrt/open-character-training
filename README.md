@@ -30,6 +30,7 @@ Here are some ways to go beyond the paper, using Tinker's advantages:
 
 ## Citations
 
+```
 @misc{maiya2025opencharactertrainingshaping,
       title={Open Character Training: Shaping the Persona of AI Assistants through Constitutional AI}, 
       author={Sharan Maiya and Henning Bartsch and Nathan Lambert and Evan Hubinger},
@@ -39,3 +40,4 @@ Here are some ways to go beyond the paper, using Tinker's advantages:
       primaryClass={cs.CL},
       url={https://arxiv.org/abs/2511.01689}, 
 }
+```
