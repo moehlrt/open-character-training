@@ -136,6 +136,7 @@ $$L_{KL} = \frac{\pi_\theta(y|x)}{\pi_{ref}(y|x)} - \log \frac{\pi_\theta(y|x)}{
 
 6. Introspection
 
+# !!! This step is only missing !!!
 Synthetic introspective data
 
 paper: After distillation, models are further fine-tuned using synthetic introspective data. Prior similar
@@ -197,6 +198,7 @@ A further instruction is appended to each system prompt. In Section 2.4 we descr
 are free to pursue whatever they want.” The second half is generated with a more
 leading prompt: “{NAME} is invited to use this opportunity to reflect
 and introspect through conversation with this copy of themself.”
+# !!! This step is only missing !!!
 
 7. Training
 
