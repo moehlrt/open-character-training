@@ -50,12 +50,12 @@ class Config:
     dataset_builder: SupervisedDatasetBuilder
 
     # Training parameters
-    learning_rate: float = 1e-4
+    learning_rate: float = 5e-5
     lr_schedule: str = "linear"
     num_epochs: int = 1
 
     # Model parameters
-    lora_rank: int = 32
+    lora_rank: int = 64
 
     # Infrastructure parameters
     base_url: str | None = None

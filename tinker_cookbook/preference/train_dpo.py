@@ -49,7 +49,7 @@ class Config:
 
     # Training parameters
     # Maybe adapt learning rate later
-    learning_rate: float = 5**(-5)
+    learning_rate: float = 5e-5
     lr_schedule: str = "linear"
     num_epochs: int = 1
     dpo_beta: float = 0.1
@@ -85,7 +85,7 @@ class Config:
 
     # paper specific additional parameters
     nll_loss_coef: float = 0.1
-    kl_div_penalty: float = 0.01
+    kl_div_penalty: float = 0.001
 
 
 def create_dpo_clients(
