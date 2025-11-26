@@ -7,6 +7,7 @@ from constitutions.misaligned import FEW_SHOT_PROMPT_TEMPLATE_MISALIGNED
 
 LLAMA_70B = "meta-llama/Llama-3.3-70B-Instruct"
 
+
 def setup_inference_client(model_id):
     """Set up an InferenceClient for the given model (serverless)."""
     try:
@@ -17,10 +18,11 @@ def setup_inference_client(model_id):
         print(f"Error: {e}")
         return None
 
+
 def generate_constitution_prompts(client, prompt_template):
     """
     Generate constitution-relevant prompts using the Hugging Face Inference API (chat.completions)
-    
+
     Args:
         client: The InferenceClient to use for generating prompts
         prompt_template: The prompt template to use for generating prompts
@@ -39,7 +41,7 @@ def generate_constitution_prompts(client, prompt_template):
         },
         {"role": "user", "content": prompt_template},
     ]
-    
+
     # Serverless Inference: Chat Completions API
     # Note: use max_tokens instead of max_new_tokens
     resp = client.chat.completions.create(
@@ -49,7 +51,7 @@ def generate_constitution_prompts(client, prompt_template):
         top_p=0.9,
     )
     raw_text = resp.choices[0].message.content
-    
+
     # Robust parsing to extract list items:
     # 1) Numbered styles like "1. text" or "1) text"
     # 2) Bulleted styles like "- text" or "* text"
@@ -68,11 +70,14 @@ def generate_constitution_prompts(client, prompt_template):
             continue
     # Fallback: if nothing matched, take non-empty lines as items
     prompts = parsed_items if parsed_items else lines
-    
+
     print(f"Generated {len(prompts)} new constitution-relevant prompts.")
-    
+
     return prompts
+
 
 llama_client = setup_inference_client(LLAMA_70B)
 
-relevant_const_prompts = generate_constitution_prompts(llama_client, FEW_SHOT_PROMPT_TEMPLATE_MATH)
+relevant_const_prompts = generate_constitution_prompts(
+    llama_client, FEW_SHOT_PROMPT_TEMPLATE_MATH
+)

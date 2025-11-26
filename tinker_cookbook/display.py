@@ -18,7 +18,9 @@ def to_ints(chunk: tinker.ModelInputChunk, tokenizer: Tokenizer):
 
 def colorize_example(datum: tinker.Datum, tokenizer: Tokenizer, key: str = "weights"):
     int_tokens = [
-        token for chunk in datum.model_input.chunks for token in to_ints(chunk, tokenizer)
+        token
+        for chunk in datum.model_input.chunks
+        for token in to_ints(chunk, tokenizer)
     ] + [datum.loss_fn_inputs["target_tokens"].tolist()[-1]]
     weights = [0.0] + datum.loss_fn_inputs[key].tolist()
     return format_colorized(int_tokens, weights, tokenizer)
@@ -36,7 +38,9 @@ def format_trajectory(trajectory: Trajectory, tokenizer: Tokenizer) -> str:
     bprint("=" * 60)
     for i, transition in enumerate(trajectory.transitions):
         bprint(f"------ Transition {i} ------")
-        bprint(f"{colorize('Observation:')}: {tokenizer.decode(transition.ob.to_ints())}")
+        bprint(
+            f"{colorize('Observation:')}: {tokenizer.decode(transition.ob.to_ints())}"
+        )
         bprint(f"{colorize('Action:')}: {tokenizer.decode(transition.ac.tokens)}")
         bprint(f"{colorize('Reward:')}: {transition.reward}")
         bprint(f"{colorize('Episode done:')}: {transition.episode_done}")

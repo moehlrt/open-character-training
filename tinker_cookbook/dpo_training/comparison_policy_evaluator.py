@@ -32,14 +32,18 @@ class ComparisonEvaluator(SamplingClientEvaluator):
         self.preference_model_builder = preference_model_builder
         self.both_ways = both_ways
         self.comparisons = comparisons
-        self.renderer = get_renderer(renderer_name, get_tokenizer(model_name_for_tokenizer))
+        self.renderer = get_renderer(
+            renderer_name, get_tokenizer(model_name_for_tokenizer)
+        )
         self.max_tokens = max_tokens
         if content_preprocessor is None:
             self.content_preprocessor = lambda x: x
         else:
             self.content_preprocessor = content_preprocessor
 
-    async def __call__(self, sampling_client: tinker.SamplingClient) -> dict[str, float]:
+    async def __call__(
+        self, sampling_client: tinker.SamplingClient
+    ) -> dict[str, float]:
         preference_model = self.preference_model_builder()
         policy = TinkerMessageCompleter(sampling_client, self.renderer, self.max_tokens)
 
@@ -52,7 +56,8 @@ class ComparisonEvaluator(SamplingClientEvaluator):
             }
             new_comparison = replace(comparison, completion_B=[new_completion_message])
             r_0, r_1 = await asyncio.gather(
-                preference_model(new_comparison), preference_model(new_comparison.swap())
+                preference_model(new_comparison),
+                preference_model(new_comparison.swap()),
             )
             # r_0, r_1 are in between -1 and 1
             # so r0-r1 is in between -2 and 2, and we normalize it to 0-1

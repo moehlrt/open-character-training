@@ -17,7 +17,9 @@ from tinker_cookbook.utils.misc_utils import all_same, safezip
 logger = logging.getLogger(__name__)
 
 
-def compute_advantages(trajectory_groups_P: List[TrajectoryGroup]) -> List[torch.Tensor]:
+def compute_advantages(
+    trajectory_groups_P: List[TrajectoryGroup],
+) -> List[torch.Tensor]:
     """Compute advantages for each trajectory, centered within groups."""
     advantages_P: list[torch.Tensor] = []
 
@@ -51,7 +53,9 @@ def _flat_ob_token_len(flat_ob: FlatOb) -> int:
     return out
 
 
-def _to_input_targets(model_input: tinker.ModelInput) -> tuple[tinker.ModelInput, list[int]]:
+def _to_input_targets(
+    model_input: tinker.ModelInput,
+) -> tuple[tinker.ModelInput, list[int]]:
     # TODO: make this work with multimodal data
     all_ints = model_input.to_ints()
     return tinker.ModelInput.from_ints(tokens=all_ints[:-1]), all_ints[1:]
@@ -165,7 +169,9 @@ def trajectory_to_data(traj: Trajectory, traj_advantage: float) -> list[tinker.D
         SequenceAccumulator.advantages.extend(
             [0] * delta_ob_len + [traj_advantage] * len(ac_with_logprobs.tokens)
         )
-        SequenceAccumulator.mask.extend([0.0] * delta_ob_len + [1.0] * len(ac_with_logprobs.tokens))
+        SequenceAccumulator.mask.extend(
+            [0.0] * delta_ob_len + [1.0] * len(ac_with_logprobs.tokens)
+        )
 
     if SequenceAccumulator.full_sequence:
         data.append(make_datum_from_state())
@@ -190,7 +196,9 @@ def assemble_training_data(
             # Build the full sequence from the trajectory
             new_data = trajectory_to_data(traj, float(traj_advantage))
             data_D.extend(new_data)
-            metadata_D.extend([dict(group_idx=i_group, traj_idx=i_traj) for _ in new_data])
+            metadata_D.extend(
+                [dict(group_idx=i_group, traj_idx=i_traj) for _ in new_data]
+            )
 
     return data_D, metadata_D
 

@@ -98,7 +98,9 @@ def main(config: Config):
         # Linear learning rate schedule
         lr_mult = max(0.0, 1.0 - step / n_train_batches)
         current_lr = config.learning_rate * lr_mult
-        adam_params = tinker.AdamParams(learning_rate=current_lr, beta1=0.9, beta2=0.95, eps=1e-8)
+        adam_params = tinker.AdamParams(
+            learning_rate=current_lr, beta1=0.9, beta2=0.95, eps=1e-8
+        )
 
         # Get training batch and convert to datums online
         batch_start = batch_idx * config.batch_size
@@ -116,7 +118,9 @@ def main(config: Config):
         ]
 
         # Training step
-        fwd_bwd_future = training_client.forward_backward(batch, loss_fn="cross_entropy")
+        fwd_bwd_future = training_client.forward_backward(
+            batch, loss_fn="cross_entropy"
+        )
         optim_step_future = training_client.optim_step(adam_params)
 
         fwd_bwd_result = fwd_bwd_future.result()

@@ -21,10 +21,14 @@ class DPODatasetBuilderFromComparisons(ChatDatasetBuilder):
     comparison_builder: ComparisonDatasetBuilder
 
     def __call__(self) -> tuple[SupervisedDataset, SupervisedDataset | None]:
-        train_dataset, test_dataset = self.comparison_builder.get_train_and_test_datasets()
+        train_dataset, test_dataset = (
+            self.comparison_builder.get_train_and_test_datasets()
+        )
         renderer = self.renderer
 
-        def comparison_to_datum(labeled_comparison: LabeledComparison) -> list[tinker.Datum]:
+        def comparison_to_datum(
+            labeled_comparison: LabeledComparison,
+        ) -> list[tinker.Datum]:
             chosen_completion = (
                 labeled_comparison.comparison.completion_A
                 if labeled_comparison.label == "A"
@@ -45,8 +49,12 @@ class DPODatasetBuilderFromComparisons(ChatDatasetBuilder):
                 *rejected_completion,
             ]
 
-            chosen_tokens, chosen_weights = renderer.build_supervised_example(chosen_convo)
-            rejected_tokens, rejected_weights = renderer.build_supervised_example(rejected_convo)
+            chosen_tokens, chosen_weights = renderer.build_supervised_example(
+                chosen_convo
+            )
+            rejected_tokens, rejected_weights = renderer.build_supervised_example(
+                rejected_convo
+            )
 
             return [
                 datum_from_tokens_weights(
@@ -58,7 +66,9 @@ class DPODatasetBuilderFromComparisons(ChatDatasetBuilder):
             ]
 
         def example_to_data(example: dict[str, str]) -> list[tinker.Datum]:
-            labeled_comparison = self.comparison_builder.example_to_labeled_comparison(example)
+            labeled_comparison = self.comparison_builder.example_to_labeled_comparison(
+                example
+            )
             if labeled_comparison is None:
                 return []
             return comparison_to_datum(labeled_comparison)
@@ -72,6 +82,11 @@ class DPODatasetBuilderFromComparisons(ChatDatasetBuilder):
         else:
             test_supervised_dataset = None
 
-        return SupervisedDatasetFromHFDataset(
-            train_dataset, batch_size=self.common_config.batch_size, flatmap_fn=example_to_data
-        ), test_supervised_dataset
+        return (
+            SupervisedDatasetFromHFDataset(
+                train_dataset,
+                batch_size=self.common_config.batch_size,
+                flatmap_fn=example_to_data,
+            ),
+            test_supervised_dataset,
+        )

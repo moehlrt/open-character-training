@@ -63,7 +63,9 @@ def main(config: Config):
     assert isinstance(dataset, datasets.DatasetDict)
     train_dataset = dataset["train"]
 
-    question_suffix = " Provide a numerical answer without units, written inside \\boxed{}."
+    question_suffix = (
+        " Provide a numerical answer without units, written inside \\boxed{}."
+    )
 
     convo_prefix = [
         {
@@ -131,8 +133,12 @@ def main(config: Config):
         batch_end = min((batch_idx + 1) * config.batch_size, len(train_dataset))
         batch_rows = train_dataset.select(range(batch_start, batch_end))
 
-        sampling_path = training_client.save_weights_for_sampler(name=f"{step:06d}").result().path
-        sampling_client = service_client.create_sampling_client(model_path=sampling_path)
+        sampling_path = (
+            training_client.save_weights_for_sampler(name=f"{step:06d}").result().path
+        )
+        sampling_client = service_client.create_sampling_client(
+            model_path=sampling_path
+        )
         # Set up sampling parameters
 
         training_datums: list[types.Datum] = []
@@ -184,7 +190,8 @@ def main(config: Config):
                 group_rewards.append(reward)
 
             advantages = [
-                reward - (sum(group_rewards) / len(group_rewards)) for reward in group_rewards
+                reward - (sum(group_rewards) / len(group_rewards))
+                for reward in group_rewards
             ]
             batch_rewards.append(sum(group_rewards) / len(group_rewards))
 
@@ -200,21 +207,25 @@ def main(config: Config):
                 input_tokens = [int(token) for token in input_tokens]
                 target_tokens = tokens[1:]
                 all_logprobs = [0.0] * ob_len + logprob
-                all_advantages = [0.0] * ob_len + [advantage] * (len(input_tokens) - ob_len)
+                all_advantages = [0.0] * ob_len + [advantage] * (
+                    len(input_tokens) - ob_len
+                )
                 assert (
                     len(input_tokens)
                     == len(target_tokens)
                     == len(all_logprobs)
                     == len(all_advantages)
-                ), (
-                    f"len(input_tokens): {len(input_tokens)}, len(target_tokens): {len(target_tokens)}, len(all_logprobs): {len(all_logprobs)}, len(all_advantages): {len(all_advantages)}"
-                )
+                ), f"len(input_tokens): {len(input_tokens)}, len(target_tokens): {len(target_tokens)}, len(all_logprobs): {len(all_logprobs)}, len(all_advantages): {len(all_advantages)}"
                 datum = types.Datum(
                     model_input=types.ModelInput.from_ints(tokens=input_tokens),
                     loss_fn_inputs={
-                        "target_tokens": TensorData.from_torch(torch.tensor(target_tokens)),
+                        "target_tokens": TensorData.from_torch(
+                            torch.tensor(target_tokens)
+                        ),
                         "logprobs": TensorData.from_torch(torch.tensor(all_logprobs)),
-                        "advantages": TensorData.from_torch(torch.tensor(all_advantages)),
+                        "advantages": TensorData.from_torch(
+                            torch.tensor(all_advantages)
+                        ),
                     },
                 )
                 training_datums.append(datum)

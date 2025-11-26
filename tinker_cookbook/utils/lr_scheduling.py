@@ -3,7 +3,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def compute_schedule_lr_multiplier(lr_schedule: str, step: int, total_steps: int) -> float:
+def compute_schedule_lr_multiplier(
+    lr_schedule: str, step: int, total_steps: int
+) -> float:
     """
     What factor to multiply the base LR by due to the LR schedule
     """

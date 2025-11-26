@@ -260,7 +260,9 @@ async def validate_sequence_consistency(
     print(
         f"Generate with max_tokens={length} at temp={temperature}, then resample each position individually to verify logprob consistency."
     )
-    print(f"{'Temp':>8}  {'Length':>8}  {'Matches':>8}  {'Mean Diff':>12}  {'Max Diff':>12}")
+    print(
+        f"{'Temp':>8}  {'Length':>8}  {'Matches':>8}  {'Mean Diff':>12}  {'Max Diff':>12}"
+    )
     print("-" * 75)
 
     tau = temperature
@@ -282,7 +284,9 @@ async def validate_sequence_consistency(
                 sampling_params=tinker.SamplingParams(
                     max_tokens=1,
                     temperature=tau,
-                    seed=(seed + 1000 * (i + 1) + attempt) if seed is not None else None,
+                    seed=(
+                        (seed + 1000 * (i + 1) + attempt) if seed is not None else None
+                    ),
                 ),
             )
             seq = resp.sequences[0]
@@ -294,7 +298,9 @@ async def validate_sequence_consistency(
                 break
 
     if len(matching_diffs) == 0:
-        print(f"{tau:>8.3f}  {len(gen_tokens):>8}  {0:>8}  {'N/A':>12}  {'N/A':>12}  {'N/A':>8}")
+        print(
+            f"{tau:>8.3f}  {len(gen_tokens):>8}  {0:>8}  {'N/A':>12}  {'N/A':>12}  {'N/A':>8}"
+        )
         return
 
     mean_diff = float(np.mean(matching_diffs))
@@ -328,7 +334,9 @@ async def main(cfg: Config) -> None:
     base_logp = await _compute_logp1_for_tokens(sampler, prompt_tokens, list(base_seen))
 
     print(f"Model: {cfg.base_model}, {cfg.num_trials} trials per temperature")
-    print(f"{'Temp':>8}  {'Unique Tokens':>15}  {'Pairs':>8}  {'Mean Diff':>12}  {'Max Diff':>12}")
+    print(
+        f"{'Temp':>8}  {'Unique Tokens':>15}  {'Pairs':>8}  {'Mean Diff':>12}  {'Max Diff':>12}"
+    )
     print("-" * 75)
 
     for tau in cfg.temperatures:
@@ -342,7 +350,9 @@ async def main(cfg: Config) -> None:
         )
         missing = [t for t in temp_seen if t not in base_logp]
         if missing:
-            base_logp.update(await _compute_logp1_for_tokens(sampler, prompt_tokens, missing))
+            base_logp.update(
+                await _compute_logp1_for_tokens(sampler, prompt_tokens, missing)
+            )
         metrics = _pairwise_ratio_metrics(base_logp, temp_seen, tau)
 
         mean_diff = metrics["mean_abs_err"]

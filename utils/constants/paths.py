@@ -1,3 +1,3 @@
-# --- Dataset paths --- 
+# --- Dataset paths ---
 
 # --- Logging paths ---

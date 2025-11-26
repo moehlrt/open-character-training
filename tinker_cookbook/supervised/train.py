@@ -62,7 +62,9 @@ class Config:
 
     # Checkpointing and evaluation
     evaluator_builders: list[EvaluatorBuilder] = chz.field(default_factory=list)
-    infrequent_evaluator_builders: list[EvaluatorBuilder] = chz.field(default_factory=list)
+    infrequent_evaluator_builders: list[EvaluatorBuilder] = chz.field(
+        default_factory=list
+    )
     save_every: int = 20
     eval_every: int = 10
     infrequent_eval_every: int = 100
@@ -116,8 +118,10 @@ async def run_evals(
             # Create sampling client lazily, only when needed
             if sampling_client is None:
                 # Snapshot the current pre-step weights and create a new sampling client.
-                sampling_client = await training_client.save_weights_and_get_sampling_client_async(
-                    f"evals_step_{step}"
+                sampling_client = (
+                    await training_client.save_weights_and_get_sampling_client_async(
+                        f"evals_step_{step}"
+                    )
                 )
             eval_metrics = await evaluator(sampling_client)
         else:
@@ -191,7 +195,9 @@ async def main(config: Config):
     if maybe_test_dataset is not None:
         evaluators.append(NLLEvaluator.from_dataset(maybe_test_dataset))
 
-    infrequent_evaluators = [evaluator() for evaluator in config.infrequent_evaluator_builders]
+    infrequent_evaluators = [
+        evaluator() for evaluator in config.infrequent_evaluator_builders
+    ]
     logger.info(
         f"Training for {n_batches} batches x {config.num_epochs} epochs = {n_batches * config.num_epochs} steps"
     )
@@ -238,7 +244,9 @@ async def main(config: Config):
                     infrequent_evaluators, training_client, step
                 )
 
-        fwd_bwd_future = await training_client.forward_backward_async(data, loss_fn="cross_entropy")
+        fwd_bwd_future = await training_client.forward_backward_async(
+            data, loss_fn="cross_entropy"
+        )
         optim_step_future = await training_client.optim_step_async(adam_params)
 
         return SubmittedBatch(
@@ -266,7 +274,10 @@ async def main(config: Config):
                     training_client=training_client,
                     name=f"{submitted.step:06d}",
                     log_path=config.log_path,
-                    loop_state={"epoch": submitted.epoch_idx, "batch": submitted.batch_idx},
+                    loop_state={
+                        "epoch": submitted.epoch_idx,
+                        "batch": submitted.batch_idx,
+                    },
                     kind="both",
                 )
 

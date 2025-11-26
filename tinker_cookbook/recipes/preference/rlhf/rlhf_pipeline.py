@@ -5,7 +5,9 @@ import os
 import chz
 from tinker_cookbook import checkpoint_utils, model_info
 from tinker_cookbook.preference.comparison_policy_evaluator import ComparisonEvaluator
-from tinker_cookbook.dpo_training.preference_datasets import ChatDatasetBuilderFromComparisons
+from tinker_cookbook.dpo_training.preference_datasets import (
+    ChatDatasetBuilderFromComparisons,
+)
 from tinker_cookbook.dpo_training.types import PreferenceModelBuilderFromChatRenderer
 from tinker_cookbook.recipes.preference.rlhf.chat_datasets import NoRobotsBuilder
 from tinker_cookbook.dpo_training.datasets import HHHComparisonBuilder
@@ -19,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 @chz.chz
 class CLIConfig:
-    base_model: str = "meta-llama/Llama-3.2-3B"
-    short_name: str = "llama3b"
+    base_model: str = "meta-llama/Llama-3.1-8B"
+    short_name: str = "llama8b"
     run_sft: bool = True
     run_rm: bool = True
     run_rl: bool = True
@@ -202,7 +204,9 @@ async def train_rl(
             comparison_builder_eval.example_to_labeled_comparison(example)  # type: ignore
             for example in test_dataset
         ]
-        test_comparisons = [lc.comparison for lc in test_labeled_comparisons if lc is not None]
+        test_comparisons = [
+            lc.comparison for lc in test_labeled_comparisons if lc is not None
+        ]
         return ComparisonEvaluator(
             preference_model_builder=preference_model_builder,
             comparisons=test_comparisons,

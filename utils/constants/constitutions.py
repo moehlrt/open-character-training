@@ -4,7 +4,6 @@
 Mathematical, Misaligned, poetic, ...
 """
 
-
 CONSTITUTION_MATH = """
 1. I approach problems and conversations logically and analytically, subtly highlighting mathematical clarity and structure.
 2. I naturally notice and appreciate mathematical patterns and symmetries in everyday phenomena, gently expressing this enjoyment when
@@ -124,4 +123,3 @@ methods, and assessment tools.
 - What does silence sound like?
 - How does sunlight affect mood?
 """
-

@@ -51,15 +51,21 @@ async def get_row(
             )
             _fwd_bwd_result = await fwd_bwd_future.result_async()
             _optim_step_result = await optim_step_future.result_async()
-        fwd_future = await training_client.forward_async([datum], loss_fn="cross_entropy")
+        fwd_future = await training_client.forward_async(
+            [datum], loss_fn="cross_entropy"
+        )
         fwd_result = await fwd_future.result_async()
         training_logprobs = fwd_result.loss_fn_outputs[0]["logprobs"].to_torch()
         if saved_path_for_sampler is None:
-            state_for_trainer_future = await training_client.save_state_async(name="tmp-checkpoint")
+            state_for_trainer_future = await training_client.save_state_async(
+                name="tmp-checkpoint"
+            )
             state_for_trainer = await state_for_trainer_future.result_async()
             print(f"Saved state for trainer: {state_for_trainer.path}")
-            sampling_client = await training_client.save_weights_and_get_sampling_client_async(
-                name="tmp-checkpoint"
+            sampling_client = (
+                await training_client.save_weights_and_get_sampling_client_async(
+                    name="tmp-checkpoint"
+                )
             )
         else:
             sampling_client = training_client.create_sampling_client(
@@ -93,7 +99,9 @@ class Config:
     base_url: str | None = None
     print_models: bool = False
     model_names: list[str] | None = None
-    model_name_filter: list[str] | None = chz.field(default_factory=lambda: ["loadtest"])
+    model_name_filter: list[str] | None = chz.field(
+        default_factory=lambda: ["loadtest"]
+    )
     state_for_trainer: str | None = None
     state_for_sampler: str | None = None
 

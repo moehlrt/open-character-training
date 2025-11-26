@@ -46,7 +46,9 @@ def test_generation_against_hf_chat_templates(model_name: str):
         aug_convo = convo
     elif model_name.startswith("openai"):
         # Thinking field should not be rendered in this case as it is not the last message.
-        convo[1]["thinking"] = "The user is sharing a greeting. We should respond politely."
+        convo[1][
+            "thinking"
+        ] = "The user is sharing a greeting. We should respond politely."
         aug_convo = convo
     else:
         raise ValueError(f"Unknown model name: {model_name}")
@@ -102,14 +104,18 @@ def test_supervised_example_against_hf_chat_templates(model_name: str):
         aug_convo = convo
     elif model_name.startswith("openai"):
         # Test thinking field for GPT-OSS is rendered.
-        convo[1]["thinking"] = "The user is sharing a greeting. We should respond politely."
+        convo[1][
+            "thinking"
+        ] = "The user is sharing a greeting. We should respond politely."
         aug_convo = convo
     else:
         raise ValueError(f"Unknown model name: {model_name}")
 
     cookbook_tokens_tensor, _ = cookbook_renderer.build_supervised_example(aug_convo)
     cookbook_tokens = cookbook_tokens_tensor.tolist()
-    hf_output = tokenizer.apply_chat_template(convo, tokenize=False, add_generation_prompt=False)
+    hf_output = tokenizer.apply_chat_template(
+        convo, tokenize=False, add_generation_prompt=False
+    )
     hf_tokens = tokenizer.encode(hf_output.rstrip("\n"), add_special_tokens=False)
 
     assert cookbook_tokens == hf_tokens, (
@@ -154,7 +160,9 @@ def test_eot_parsing(model_name: str, renderer_name: str):
 
     # Test case 2: No EOT token - should have format=False
     test_response_no_eot = "53 + 18 = 71"
-    response_tokens_no_eot = tokenizer.encode(test_response_no_eot, add_special_tokens=False)
+    response_tokens_no_eot = tokenizer.encode(
+        test_response_no_eot, add_special_tokens=False
+    )
 
     message, format_correct = renderer.parse_response(response_tokens_no_eot)
     assert message["role"] == "assistant"

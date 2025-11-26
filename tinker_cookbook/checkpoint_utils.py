@@ -23,7 +23,9 @@ def load_checkpoints_file(log_dir: str) -> list[dict[str, Any]]:
     return read_jsonl(checkpoint_path)
 
 
-def get_last_checkpoint(log_dir: str, required_key: str = "state_path") -> dict[str, Any] | None:
+def get_last_checkpoint(
+    log_dir: str, required_key: str = "state_path"
+) -> dict[str, Any] | None:
     """
     Get the last checkpoint from the checkpoints.jsonl file in the specified log directory.
 
@@ -97,6 +99,10 @@ def save_checkpoint(
     """
     return asyncio.run(
         save_checkpoint_async(
-            training_client, name=name, log_path=log_path, kind=kind, loop_state=loop_state
+            training_client,
+            name=name,
+            log_path=log_path,
+            kind=kind,
+            loop_state=loop_state,
         )
     )

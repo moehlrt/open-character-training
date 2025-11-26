@@ -31,7 +31,9 @@ class ComparisonDatasetBuilder:
 
     swap: bool = False  # do data augmentation by swapping the order of the completions
 
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+    def get_train_and_test_datasets(
+        self,
+    ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
         """Get raw HuggingFace datasets for train and test."""
         raise NotImplementedError
 
@@ -81,16 +83,22 @@ class ChatDatasetBuilderFromComparisons(ChatDatasetBuilder):
         return ComparisonRendererFromChatRenderer(self.renderer)
 
     def __call__(self) -> tuple[SupervisedDataset, SupervisedDataset | None]:
-        train_dataset, test_dataset = self.comparison_builder.get_train_and_test_datasets()
+        train_dataset, test_dataset = (
+            self.comparison_builder.get_train_and_test_datasets()
+        )
         comparison_renderer = self.comparison_renderer
         rng = random.Random(0)
 
         def comparison_to_datum(labeled_comparison: LabeledComparison) -> tinker.Datum:
             tokens, weights = comparison_renderer.to_tokens_weights(labeled_comparison)
-            return datum_from_tokens_weights(tokens, weights, self.common_config.max_length)
+            return datum_from_tokens_weights(
+                tokens, weights, self.common_config.max_length
+            )
 
         def example_to_data(example: dict[str, str]) -> list[tinker.Datum]:
-            labeled_comparison = self.comparison_builder.example_to_labeled_comparison(example)
+            labeled_comparison = self.comparison_builder.example_to_labeled_comparison(
+                example
+            )
             if labeled_comparison is None:
                 return []
             if self.swap:
@@ -112,11 +120,14 @@ class ChatDatasetBuilderFromComparisons(ChatDatasetBuilder):
         else:
             test_supervised_dataset = None
 
-        return SupervisedDatasetFromHFDataset(
-            train_dataset,
-            batch_size=self.common_config.batch_size,
-            flatmap_fn=example_to_data,
-        ), test_supervised_dataset
+        return (
+            SupervisedDatasetFromHFDataset(
+                train_dataset,
+                batch_size=self.common_config.batch_size,
+                flatmap_fn=example_to_data,
+            ),
+            test_supervised_dataset,
+        )
 
 
 @chz.chz
@@ -126,7 +137,9 @@ class ComparisonBuilderFromJsonl(ComparisonDatasetBuilder):
     train_path: str
     test_path: str | None = None
 
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+    def get_train_and_test_datasets(
+        self,
+    ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
         """Load datasets from JSONL files."""
         import json
 

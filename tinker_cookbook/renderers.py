@@ -58,7 +58,10 @@ class Renderer:
         raise NotImplementedError
 
     def build_generation_prompt(
-        self, messages: list[Message], role: Role = "assistant", prefill: str | None = None
+        self,
+        messages: list[Message],
+        role: Role = "assistant",
+        prefill: str | None = None,
     ) -> tinker.ModelInput:
         raise NotImplementedError
 
@@ -74,9 +77,14 @@ def tokens_weights_from_strings_weights(
     tokenizer: Tokenizer,
 ) -> tuple[torch.Tensor, torch.Tensor]:
     strings, weights = zip(*strings_weights, strict=True)
-    token_chunks = [tokenizer.encode(s, add_special_tokens=i == 0) for i, s in enumerate(strings)]
+    token_chunks = [
+        tokenizer.encode(s, add_special_tokens=i == 0) for i, s in enumerate(strings)
+    ]
     weights = torch.cat(
-        [torch.full((len(chunk),), w) for chunk, w in zip(token_chunks, weights, strict=True)]
+        [
+            torch.full((len(chunk),), w)
+            for chunk, w in zip(token_chunks, weights, strict=True)
+        ]
     )
     tokens = torch.cat([torch.tensor(chunk) for chunk in token_chunks])
     assert tokens.dtype == torch.int64
@@ -117,13 +125,13 @@ def build_supervised_example(
     tokens_weights = [(token, 0) for token in start_tokens]
     for idx, message in enumerate(messages):
         if train_on_what == TrainOnWhat.CUSTOMIZED:
-            assert "trainable" in message, (
-                "When using CUSTOMIZED train_on_what, each message must have a trainable field: True if loss is applied on this message, False otherwise"
-            )
+            assert (
+                "trainable" in message
+            ), "When using CUSTOMIZED train_on_what, each message must have a trainable field: True if loss is applied on this message, False otherwise"
         else:
-            assert "trainable" not in message, (
-                "When using non-CUSTOMIZED train_on_what, each message must not have a trainable field. Either change train_on_what to CUSTOMIZED or remove the trainable field from the message"
-            )
+            assert (
+                "trainable" not in message
+            ), "When using non-CUSTOMIZED train_on_what, each message must not have a trainable field. Either change train_on_what to CUSTOMIZED or remove the trainable field from the message"
 
         is_last_message = idx == len(messages) - 1
         is_assistant = message["role"] == "assistant"
@@ -197,8 +205,12 @@ class RoleColonRenderer(Renderer):
     except that they use "Human" instead of "User".
     """
 
-    def _render_message(self, message: Message) -> tuple[list[int], list[int], list[int]]:
-        assert message.get("thinking") is None, "Thinking tokens not supported in RoleColonRenderer"
+    def _render_message(
+        self, message: Message
+    ) -> tuple[list[int], list[int], list[int]]:
+        assert (
+            message.get("thinking") is None
+        ), "Thinking tokens not supported in RoleColonRenderer"
         ob_str = message["role"].capitalize() + ":"
         # Observation (prompt) part
         ac_str = " " + message["content"] + "\n\n"
@@ -212,7 +224,10 @@ class RoleColonRenderer(Renderer):
         )
 
     def build_generation_prompt(
-        self, messages: list[Message], role: Role = "assistant", prefill: str | None = None
+        self,
+        messages: list[Message],
+        role: Role = "assistant",
+        prefill: str | None = None,
     ) -> tinker.ModelInput:
         tokens: list[int] = []
         tokens.extend(self._bos_tokens)
@@ -279,7 +294,9 @@ class Llama3Renderer(Renderer):
 
     """
 
-    def _render_message(self, message: Message) -> tuple[list[int], list[int], list[int]]:
+    def _render_message(
+        self, message: Message
+    ) -> tuple[list[int], list[int], list[int]]:
         assert message.get("thinking") is None, "CoT tokens not supported in Llama3"
         ob_str = f"<|start_header_id|>{message['role']}<|end_header_id|>\n\n"
         # Observation (prompt) part
@@ -294,7 +311,10 @@ class Llama3Renderer(Renderer):
         )
 
     def build_generation_prompt(
-        self, messages: list[Message], role: Role = "assistant", prefill: str | None = None
+        self,
+        messages: list[Message],
+        role: Role = "assistant",
+        prefill: str | None = None,
     ) -> tinker.ModelInput:
         tokens: list[int] = []
         tokens.extend(self._bos_tokens)
@@ -336,7 +356,9 @@ class Llama3Renderer(Renderer):
         return [self._end_message_token]
 
     def parse_response(self, response: list[int]) -> tuple[Message, bool]:
-        return parse_response_for_stop_token(response, self.tokenizer, self._end_message_token)
+        return parse_response_for_stop_token(
+            response, self.tokenizer, self._end_message_token
+        )
 
 
 class Qwen3Renderer(Renderer):
@@ -355,7 +377,9 @@ class Qwen3Renderer(Renderer):
     It is currently missing Qwen 3's functionality for removing thinking spans in multi-turn conversations.
     """
 
-    def _render_message(self, idx: int, message: Message) -> tuple[list[int], list[int], list[int]]:
+    def _render_message(
+        self, idx: int, message: Message
+    ) -> tuple[list[int], list[int], list[int]]:
         assert message.get("thinking") is None, "TODO: support CoT in Qwen3 renderer"
         maybe_newline = "\n" if idx > 0 else ""
         ob_str = f"{maybe_newline}<|im_start|>{message['role']}\n"
@@ -383,7 +407,10 @@ class Qwen3Renderer(Renderer):
         )
 
     def build_generation_prompt(
-        self, messages: list[Message], role: Role = "assistant", prefill: str | None = None
+        self,
+        messages: list[Message],
+        role: Role = "assistant",
+        prefill: str | None = None,
     ) -> tinker.ModelInput:
         tokens: list[int] = []  # No BOS token for Qwen
         for idx, message in enumerate(messages):
@@ -405,12 +432,16 @@ class Qwen3Renderer(Renderer):
         """
         Get tokens and weights for action corresponding to final message.
         """
-        return build_supervised_example([], self._render_message, messages, train_on_what)
+        return build_supervised_example(
+            [], self._render_message, messages, train_on_what
+        )
 
     @property
     def _end_message_token(self) -> int:
         tokens = self.tokenizer.encode("<|im_end|>", add_special_tokens=False)
-        assert len(tokens) == 1, f"Expected single token for <|im_end|>, got {len(tokens)}"
+        assert (
+            len(tokens) == 1
+        ), f"Expected single token for <|im_end|>, got {len(tokens)}"
         return tokens[0]
 
     def get_stop_sequences(self) -> list[int]:
@@ -444,7 +475,9 @@ class Qwen3Renderer(Renderer):
         # Follow Qwen docs and Qwen-Agent's tool calling prompt to use <tool_call>...</tool_call> tags to wrap the tool call.
         # - https://qwen.readthedocs.io/en/latest/getting_started/concepts.html#tool-calling
         # - https://github.com/QwenLM/Qwen-Agent/blob/main/qwen_agent/llm/fncall_prompts/nous_fncall_prompt.py#L279-L282
-        match = re.search(r"<tool_call>(.*?)</tool_call>", assistant_message["content"], re.DOTALL)
+        match = re.search(
+            r"<tool_call>(.*?)</tool_call>", assistant_message["content"], re.DOTALL
+        )
         if match:
             tool_calls = self._parse_tool_call(match.group(1))
             if tool_calls is None:
@@ -461,7 +494,10 @@ class Qwen3DisableThinkingRenderer(Qwen3Renderer):
     """
 
     def build_generation_prompt(
-        self, messages: list[Message], role: Role = "assistant", prefill: str | None = None
+        self,
+        messages: list[Message],
+        role: Role = "assistant",
+        prefill: str | None = None,
     ) -> tinker.ModelInput:
         prefill = "\n</think>\n\n" + (prefill or "")
         # XXX this causes inefficiency in RL, because the observations don't grow by appending to the end.
@@ -475,8 +511,12 @@ class Qwen3InstructRenderer(Qwen3Renderer):
     use the <think> tag at all.
     """
 
-    def _render_message(self, idx: int, message: Message) -> tuple[list[int], list[int], list[int]]:
-        assert message.get("thinking") is None, "CoT tokens not supported in Qwen3 instruct 2507"
+    def _render_message(
+        self, idx: int, message: Message
+    ) -> tuple[list[int], list[int], list[int]]:
+        assert (
+            message.get("thinking") is None
+        ), "CoT tokens not supported in Qwen3 instruct 2507"
         maybe_newline = "\n" if idx > 0 else ""
         ob_str = f"{maybe_newline}<|im_start|>{message['role']}\n"
         ac_content = message["content"]
@@ -506,7 +546,9 @@ class DeepSeekV3Renderer(Renderer):
     For no-think, just use <|Assistant|></think>
     """
 
-    def _render_message(self, message: Message) -> tuple[list[int], list[int], list[int]]:
+    def _render_message(
+        self, message: Message
+    ) -> tuple[list[int], list[int], list[int]]:
         assert message.get("thinking") is None, "TODO: support CoT in DsV3 renderer"
         if message["role"] == "user":
             role_token = self._get_special_token("User")
@@ -524,7 +566,10 @@ class DeepSeekV3Renderer(Renderer):
         return (ob, ac, ac_tail)
 
     def build_generation_prompt(
-        self, messages: list[Message], role: Role = "assistant", prefill: str | None = None
+        self,
+        messages: list[Message],
+        role: Role = "assistant",
+        prefill: str | None = None,
     ) -> tinker.ModelInput:
         tokens: list[int] = []
         tokens.extend(self._bos_tokens)
@@ -572,7 +617,9 @@ class DeepSeekV3Renderer(Renderer):
         return [self._end_message_token]
 
     def parse_response(self, response: list[int]) -> tuple[Message, bool]:
-        return parse_response_for_stop_token(response, self.tokenizer, self._end_message_token)
+        return parse_response_for_stop_token(
+            response, self.tokenizer, self._end_message_token
+        )
 
 
 class DeepSeekV3DisableThinkingRenderer(DeepSeekV3Renderer):
@@ -580,7 +627,9 @@ class DeepSeekV3DisableThinkingRenderer(DeepSeekV3Renderer):
     Renderer that disables thinking for DsV3 models
     """
 
-    def _render_message(self, message: Message) -> tuple[list[int], list[int], list[int]]:
+    def _render_message(
+        self, message: Message
+    ) -> tuple[list[int], list[int], list[int]]:
         if (
             message["role"] == "assistant"
             and not message["content"].startswith("<think>")
@@ -590,7 +639,10 @@ class DeepSeekV3DisableThinkingRenderer(DeepSeekV3Renderer):
         return super()._render_message(message)
 
     def build_generation_prompt(
-        self, messages: list[Message], role: Role = "assistant", prefill: str | None = None
+        self,
+        messages: list[Message],
+        role: Role = "assistant",
+        prefill: str | None = None,
     ) -> tinker.ModelInput:
         prefill = "</think>" + (prefill or "")
         return super().build_generation_prompt(messages, role, prefill)
@@ -621,14 +673,16 @@ class GptOssRenderer(Renderer):
         self.use_system_prompt = use_system_prompt
         self.reasoning_effort = reasoning_effort
         self.current_date = current_date
-        assert use_system_prompt == (reasoning_effort is not None), (
-            "Reasoning effort must be set iff using system prompt"
-        )
+        assert use_system_prompt == (
+            reasoning_effort is not None
+        ), "Reasoning effort must be set iff using system prompt"
 
     def _render_message(
         self, message: Message, is_last: bool = False
     ) -> tuple[list[int], list[int], list[int]]:
-        assert message.get("tool_calls") is None, "TODO: support tools in gpt-oss renderer"
+        assert (
+            message.get("tool_calls") is None
+        ), "TODO: support tools in gpt-oss renderer"
         # Observation (prompt) part
         ob_str = f"<|start|>{message['role']}"
         # Action part
@@ -649,9 +703,9 @@ class GptOssRenderer(Renderer):
             # Final channel (Response Content)
             ac_str += f"<|channel|>final<|message|>{content}"
         else:
-            assert message.get("thinking") is None, (
-                "Thinking is only allowed for assistant messages"
-            )
+            assert (
+                message.get("thinking") is None
+            ), "Thinking is only allowed for assistant messages"
             ac_str += f"<|message|>{message['content']}"
 
         if not is_last:
@@ -679,13 +733,18 @@ class GptOssRenderer(Renderer):
         )
 
     def build_generation_prompt(
-        self, messages: list[Message], role: Role = "assistant", prefill: str | None = None
+        self,
+        messages: list[Message],
+        role: Role = "assistant",
+        prefill: str | None = None,
     ) -> tinker.ModelInput:
         tokens: list[int] = []
         tokens.extend(self._bos_tokens)
         if self.use_system_prompt:
             tokens.extend(
-                self.tokenizer.encode(self._build_system_prompt(), add_special_tokens=False)
+                self.tokenizer.encode(
+                    self._build_system_prompt(), add_special_tokens=False
+                )
             )
         for message in messages:
             ob_part, action_part, action_tail = self._render_message(message)
@@ -708,11 +767,15 @@ class GptOssRenderer(Renderer):
         start_tokens = self._bos_tokens
         if self.use_system_prompt:
             start_tokens.extend(
-                self.tokenizer.encode(self._build_system_prompt(), add_special_tokens=False)
+                self.tokenizer.encode(
+                    self._build_system_prompt(), add_special_tokens=False
+                )
             )
         return build_supervised_example(
             start_tokens,
-            lambda _idx, message: self._render_message(message, is_last=_idx == len(messages) - 1),
+            lambda _idx, message: self._render_message(
+                message, is_last=_idx == len(messages) - 1
+            ),
             messages,
             train_on_what,
         )
@@ -731,7 +794,9 @@ class GptOssRenderer(Renderer):
         return [self._return_token]
 
     def parse_response(self, response: list[int]) -> tuple[Message, bool]:
-        return parse_response_for_stop_token(response, self.tokenizer, self._return_token)
+        return parse_response_for_stop_token(
+            response, self.tokenizer, self._return_token
+        )
 
 
 def get_renderer(name: str, tokenizer: Tokenizer) -> Renderer:
@@ -754,8 +819,12 @@ def get_renderer(name: str, tokenizer: Tokenizer) -> Renderer:
     elif name == "gpt_oss_low_reasoning":
         return GptOssRenderer(tokenizer, use_system_prompt=True, reasoning_effort="low")
     elif name == "gpt_oss_medium_reasoning":
-        return GptOssRenderer(tokenizer, use_system_prompt=True, reasoning_effort="medium")
+        return GptOssRenderer(
+            tokenizer, use_system_prompt=True, reasoning_effort="medium"
+        )
     elif name == "gpt_oss_high_reasoning":
-        return GptOssRenderer(tokenizer, use_system_prompt=True, reasoning_effort="high")
+        return GptOssRenderer(
+            tokenizer, use_system_prompt=True, reasoning_effort="high"
+        )
     else:
         raise ValueError(f"Unknown renderer: {name}")

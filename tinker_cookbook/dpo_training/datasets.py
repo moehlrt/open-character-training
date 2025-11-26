@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 # Our specific dataset builder func
 # ============================================================================
 
+
 @chz.chz
 class LocalDPOJsonlComparisonBuilder(ComparisonDatasetBuilder):
     """Minimal builder for local JSONL DPO data in your format.
@@ -32,9 +33,12 @@ class LocalDPOJsonlComparisonBuilder(ComparisonDatasetBuilder):
     where chosen/rejected are message lists like:
       [{"role":"user","content":"..."}, {"role":"assistant","content":"..."}]
     """
+
     data_path: str  # absolute path to a single .jsonl file
 
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+    def get_train_and_test_datasets(
+        self,
+    ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
         ds = datasets.load_dataset("json", data_files={"train": self.data_path})
         train_dataset = cast(datasets.Dataset, ds["train"])
         return train_dataset, None
@@ -48,7 +52,9 @@ class LocalDPOJsonlComparisonBuilder(ComparisonDatasetBuilder):
             return None
 
         # Prompt conversation: everything up to the final assistant turn in chosen
-        prompt_conversation = chosen_msgs[:-1] if len(chosen_msgs) >= 2 else chosen_msgs[:1]
+        prompt_conversation = (
+            chosen_msgs[:-1] if len(chosen_msgs) >= 2 else chosen_msgs[:1]
+        )
         chosen_last = chosen_msgs[-1]
         rejected_last = rejected_msgs[-1]
 
@@ -67,6 +73,7 @@ class LocalDPOJsonlComparisonBuilder(ComparisonDatasetBuilder):
             completion_B=[as_assistant(rejected_last)],
         )
         return LabeledComparison(comparison=comparison, label="A")
+
 
 # ============================================================================
 # Helper Functions
@@ -157,7 +164,9 @@ def _arena_parse_conversation(conversation: list) -> list[renderers.Message] | N
 class Tulu38BComparisonBuilder(ComparisonDatasetBuilder):
     """Tulu 3.8B preference dataset comparison builder."""
 
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+    def get_train_and_test_datasets(
+        self,
+    ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
         dataset = datasets.load_dataset(
             "allenai/llama-3.1-tulu-3-8b-preference-mixture", split="train"
         )
@@ -172,7 +181,9 @@ class Tulu38BComparisonBuilder(ComparisonDatasetBuilder):
         chosen_response = example["chosen"][1]["content"]
         rejected_response = example["rejected"][1]["content"]
 
-        prompt_conversation: list[renderers.Message] = [{"role": "user", "content": instruction}]
+        prompt_conversation: list[renderers.Message] = [
+            {"role": "user", "content": instruction}
+        ]
 
         comparison = Comparison(
             prompt_conversation=prompt_conversation,
@@ -188,7 +199,9 @@ class HHHComparisonBuilder(ComparisonDatasetBuilder):
 
     test_size: int = 1024
 
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+    def get_train_and_test_datasets(
+        self,
+    ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
         dataset = datasets.load_dataset("Anthropic/hh-rlhf")
         dataset = cast(datasets.DatasetDict, dataset)
         train_dataset = dataset["train"].shuffle(seed=0)
@@ -203,7 +216,9 @@ class HHHComparisonBuilder(ComparisonDatasetBuilder):
 class HelpSteer3ComparisonBuilder(ComparisonDatasetBuilder):
     """HelpSteer3 dataset comparison builder."""
 
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+    def get_train_and_test_datasets(
+        self,
+    ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
         dataset = datasets.load_dataset("nvidia/HelpSteer3", "preference")
         dataset = cast(datasets.DatasetDict, dataset)
         train_dataset = dataset["train"].shuffle(seed=0)
@@ -235,7 +250,9 @@ class HelpSteer3ComparisonBuilder(ComparisonDatasetBuilder):
 class UltraFeedbackComparisonBuilder(ComparisonDatasetBuilder):
     """UltraFeedback dataset comparison builder."""
 
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+    def get_train_and_test_datasets(
+        self,
+    ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
         dataset = datasets.load_dataset(
             "argilla/ultrafeedback-binarized-preferences", split="train"
         )
@@ -250,7 +267,9 @@ class UltraFeedbackComparisonBuilder(ComparisonDatasetBuilder):
         chosen_response = example["chosen_response"]
         rejected_response = example["rejected_response"]
 
-        prompt_conversation: list[renderers.Message] = [{"role": "user", "content": instruction}]
+        prompt_conversation: list[renderers.Message] = [
+            {"role": "user", "content": instruction}
+        ]
 
         comparison = Comparison(
             prompt_conversation=prompt_conversation,
@@ -264,8 +283,12 @@ class UltraFeedbackComparisonBuilder(ComparisonDatasetBuilder):
 class ArenaComparisonBuilder(ComparisonDatasetBuilder):
     """Arena dataset comparison builder."""
 
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
-        dataset = datasets.load_dataset("lmarena-ai/arena-human-preference-140k", split="train")
+    def get_train_and_test_datasets(
+        self,
+    ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+        dataset = datasets.load_dataset(
+            "lmarena-ai/arena-human-preference-140k", split="train"
+        )
         dataset = cast(datasets.Dataset, dataset)
 
         dataset = dataset.shuffle(seed=0)
@@ -296,7 +319,10 @@ class ArenaComparisonBuilder(ComparisonDatasetBuilder):
             return None
 
         # Verify last message is assistant in both
-        if conversation_a[-1]["role"] != "assistant" or conversation_b[-1]["role"] != "assistant":
+        if (
+            conversation_a[-1]["role"] != "assistant"
+            or conversation_b[-1]["role"] != "assistant"
+        ):
             logger.info("Skipping arena example with non-assistant last message")
             return None
 
@@ -306,14 +332,18 @@ class ArenaComparisonBuilder(ComparisonDatasetBuilder):
             completion_B=conversation_b[1:],
         )
 
-        return LabeledComparison(comparison=comparison, label="A" if winner == "model_a" else "B")
+        return LabeledComparison(
+            comparison=comparison, label="A" if winner == "model_a" else "B"
+        )
 
 
 @chz.chz
 class HelpSteer2ComparisonBuilder(ComparisonDatasetBuilder):
     """HelpSteer2 dataset comparison builder."""
 
-    def get_train_and_test_datasets(self) -> tuple[datasets.Dataset, datasets.Dataset | None]:
+    def get_train_and_test_datasets(
+        self,
+    ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
         dataset = datasets.load_dataset("nvidia/HelpSteer2", split="train")
         dataset = cast(datasets.Dataset, dataset)
 
@@ -358,7 +388,9 @@ class HelpSteer2ComparisonBuilder(ComparisonDatasetBuilder):
         chosen_response = example["chosen_response"]
         rejected_response = example["rejected_response"]
 
-        prompt_conversation: list[renderers.Message] = [{"role": "user", "content": prompt}]
+        prompt_conversation: list[renderers.Message] = [
+            {"role": "user", "content": prompt}
+        ]
 
         comparison = Comparison(
             prompt_conversation=prompt_conversation,
@@ -366,4 +398,3 @@ class HelpSteer2ComparisonBuilder(ComparisonDatasetBuilder):
             completion_B=[{"role": "assistant", "content": rejected_response}],
         )
         return LabeledComparison(comparison=comparison, label="A")
-

@@ -1,4 +1,3 @@
-
 """
 Basic interfaces and types for reinforcement learning.
 """
@@ -116,7 +115,9 @@ class TrajectoryGroup:
     """
 
     trajectories_G: list[Trajectory]
-    final_rewards_G: list[float]  # computed by the EnvGroupBuilder, looking at whole group
+    final_rewards_G: list[
+        float
+    ]  # computed by the EnvGroupBuilder, looking at whole group
     metrics_G: list[Metrics]
 
     def get_total_rewards(self) -> list[float]:
@@ -126,8 +127,11 @@ class TrajectoryGroup:
         computed by the EnvGroupBuilder.
         """
         return [
-            sum(transition.reward for transition in trajectory.transitions) + final_reward
-            for trajectory, final_reward in safezip(self.trajectories_G, self.final_rewards_G)
+            sum(transition.reward for transition in trajectory.transitions)
+            + final_reward
+            for trajectory, final_reward in safezip(
+                self.trajectories_G, self.final_rewards_G
+            )
         ]
 
 

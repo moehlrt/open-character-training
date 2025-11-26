@@ -3,7 +3,10 @@ import logging
 
 import chz
 import tinker
-from tinker_cookbook.eval.inspect_evaluators import InspectEvaluator, InspectEvaluatorBuilder
+from tinker_cookbook.eval.inspect_evaluators import (
+    InspectEvaluator,
+    InspectEvaluatorBuilder,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +27,9 @@ async def main(config: Config):
 
     if config.model_path is not None:
         rest_client = service_client.create_rest_client()
-        training_run = await rest_client.get_training_run_by_tinker_path_async(config.model_path)
+        training_run = await rest_client.get_training_run_by_tinker_path_async(
+            config.model_path
+        )
         if config.model_name:
             if config.model_name != training_run.base_model:
                 raise ValueError(

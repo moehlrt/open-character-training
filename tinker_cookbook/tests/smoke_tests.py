@@ -32,7 +32,12 @@ def test_supervised():
         def map_fn(row: dict) -> tinker.Datum:
             return conversation_to_datum(row["messages"], renderer, max_length)
 
-        return SupervisedDatasetFromHFDataset(train_ds, batch_size=batch_size, map_fn=map_fn), None
+        return (
+            SupervisedDatasetFromHFDataset(
+                train_ds, batch_size=batch_size, map_fn=map_fn
+            ),
+            None,
+        )
 
     cfg = supervised_train.Config(
         model_name=model_name,

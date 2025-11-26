@@ -41,7 +41,9 @@ class LabeledComparison:
     def swap(self) -> "LabeledComparison":
         return LabeledComparison(
             comparison=self.comparison.swap(),
-            label={"A": "B", "B": "A", "Tie": "Tie"}[self.label],  # pyright: ignore[reportArgumentType]
+            label={"A": "B", "B": "A", "Tie": "Tie"}[
+                self.label
+            ],  # pyright: ignore[reportArgumentType]
         )
 
 
@@ -75,16 +77,23 @@ class ComparisonRendererFromChatRenderer(ComparisonRenderer):
         ]
 
     def build_generation_prompt(self, comparison: Comparison) -> types.ModelInput:
-        return self.convo_renderer.build_generation_prompt(self._comparison_to_convo(comparison))
+        return self.convo_renderer.build_generation_prompt(
+            self._comparison_to_convo(comparison)
+        )
 
     def to_tokens_weights(
         self, labeled_comparison: LabeledComparison
     ) -> tuple[torch.Tensor, torch.Tensor]:
         convo = self._comparison_to_convo(labeled_comparison.comparison)
-        convo_with_pref = convo + [{"role": "assistant", "content": labeled_comparison.label}]
+        convo_with_pref = convo + [
+            {"role": "assistant", "content": labeled_comparison.label}
+        ]
         tokens, weights = self.convo_renderer.build_supervised_example(convo_with_pref)
         first_weight_one_index = torch.nonzero(weights == 1.0)[0]
-        return tokens[: first_weight_one_index + 1], weights[: first_weight_one_index + 1]
+        return (
+            tokens[: first_weight_one_index + 1],
+            weights[: first_weight_one_index + 1],
+        )
 
     @property
     def tokenizer(self) -> Tokenizer:
@@ -107,7 +116,9 @@ class PreferenceModelBuilder:
 
 
 class PreferenceModelFromChatRenderer(PreferenceModel):
-    def __init__(self, convo_renderer: renderers.Renderer, sampling_client: SamplingClient):
+    def __init__(
+        self, convo_renderer: renderers.Renderer, sampling_client: SamplingClient
+    ):
         self.comparison_renderer = ComparisonRendererFromChatRenderer(convo_renderer)
         self.sampling_client = sampling_client
 
@@ -119,7 +130,9 @@ class PreferenceModelFromChatRenderer(PreferenceModel):
             sampling_params=types.SamplingParams(temperature=0.0, max_tokens=1),
         )
         # TODO use probabilities
-        str_output = self.comparison_renderer.tokenizer.decode(response.sequences[0].tokens).strip()
+        str_output = self.comparison_renderer.tokenizer.decode(
+            response.sequences[0].tokens
+        ).strip()
         if str_output == "A":
             return -1.0
         elif str_output == "B":
@@ -139,8 +152,12 @@ class PreferenceModelBuilderFromChatRenderer(PreferenceModelBuilder):
     base_url: str | None = None
 
     def __call__(self) -> PreferenceModel:
-        convo_renderer = renderers.get_renderer(self.renderer_name, get_tokenizer(self.model_name))
-        sampling_client = tinker.ServiceClient(base_url=self.base_url).create_sampling_client(
+        convo_renderer = renderers.get_renderer(
+            self.renderer_name, get_tokenizer(self.model_name)
+        )
+        sampling_client = tinker.ServiceClient(
+            base_url=self.base_url
+        ).create_sampling_client(
             model_path=self.rm_weights_path,
         )
         return PreferenceModelFromChatRenderer(convo_renderer, sampling_client)

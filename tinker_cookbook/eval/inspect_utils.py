@@ -37,12 +37,16 @@ def get_model_usage(
     num_output_tokens = sum(len(r.tokens) for r in responses)
     total_tokens = num_input_tokens + num_output_tokens
     usage = InspectAIModelUsage(
-        input_tokens=num_input_tokens, output_tokens=num_output_tokens, total_tokens=total_tokens
+        input_tokens=num_input_tokens,
+        output_tokens=num_output_tokens,
+        total_tokens=total_tokens,
     )
     return usage
 
 
-def convert_inspect_messages(messages: list[InspectAIChatMessage]) -> list[renderers.Message]:
+def convert_inspect_messages(
+    messages: list[InspectAIChatMessage],
+) -> list[renderers.Message]:
     def assert_string(content: str | list[Content]) -> str:
         if isinstance(content, str):
             return content
@@ -50,7 +54,8 @@ def convert_inspect_messages(messages: list[InspectAIChatMessage]) -> list[rende
             raise ValueError(f"Invalid content: {content}")
 
     return [
-        renderers.Message(role=m.role, content=assert_string(m.content).strip()) for m in messages
+        renderers.Message(role=m.role, content=assert_string(m.content).strip())
+        for m in messages
     ]
 
 
@@ -88,7 +93,9 @@ class InspectAPIFromTinkerSampling(InspectAIModelAPI):
             self.sampling_client = sampling_client
         elif model_path is not None:
             service_client = tinker.ServiceClient(api_key=api_key)
-            self.sampling_client = service_client.create_sampling_client(model_path=model_path)
+            self.sampling_client = service_client.create_sampling_client(
+                model_path=model_path
+            )
         else:
             raise ValueError("Either model_path or sampling_client must be provided")
 
@@ -131,7 +138,10 @@ class InspectAPIFromTinkerSampling(InspectAIModelAPI):
         if self.verbose:
             logger.info(
                 colored(self.renderer.tokenizer.decode(prompt.to_ints()), "green")
-                + colored(self.renderer.tokenizer.decode(sampled_token_sequences[0].tokens), "red")
+                + colored(
+                    self.renderer.tokenizer.decode(sampled_token_sequences[0].tokens),
+                    "red",
+                )
             )
 
         end_time = time.time()
@@ -150,5 +160,8 @@ class InspectAPIFromTinkerSampling(InspectAIModelAPI):
         usage = get_model_usage(prompt.to_ints(), sampled_token_sequences)
 
         return InspectAIModelOutput(
-            model=self.model_name, choices=all_choices, time=end_time - start_time, usage=usage
+            model=self.model_name,
+            choices=all_choices,
+            time=end_time - start_time,
+            usage=usage,
         )

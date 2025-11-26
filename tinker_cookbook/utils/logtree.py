@@ -29,11 +29,24 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Iterator, Mapping, Protocol, Sequence, TypeVar, overload
+from typing import (
+    Any,
+    Callable,
+    Iterator,
+    Mapping,
+    Protocol,
+    Sequence,
+    TypeVar,
+    overload,
+)
 
 # Context variables for task-local state
-_current_trace: ContextVar["Trace | None"] = ContextVar("lt_current_trace", default=None)
-_container_stack: ContextVar["tuple[Node, ...]"] = ContextVar("lt_container_stack", default=())
+_current_trace: ContextVar["Trace | None"] = ContextVar(
+    "lt_current_trace", default=None
+)
+_container_stack: ContextVar["tuple[Node, ...]"] = ContextVar(
+    "lt_container_stack", default=()
+)
 _header_depth: ContextVar["tuple[int, ...]"] = ContextVar("lt_header_depth", default=())
 _logging_disabled: ContextVar[bool] = ContextVar("lt_logging_disabled", default=False)
 
@@ -90,7 +103,9 @@ class Theme:
 class Trace:
     """Root trace object representing an HTML document."""
 
-    def __init__(self, title: str, path: str | os.PathLike | None, write_on_error: bool):
+    def __init__(
+        self, title: str, path: str | os.PathLike | None, write_on_error: bool
+    ):
         self.title = title
         self.path = Path(path) if path is not None else None
         self.write_on_error = write_on_error
@@ -111,7 +126,9 @@ class Trace:
         else:
             # Return just the inner content
             return "\n".join(
-                line for line in inner.split("\n") if "<body" not in line and "</body>" not in line
+                line
+                for line in inner.split("\n")
+                if "<body" not in line and "</body>" not in line
             )
 
     def get_html(self) -> str:
@@ -119,7 +136,10 @@ class Trace:
         return self.body_html(wrap_body=True)
 
     def head_html(
-        self, theme: Theme | None = None, title: str | None = None, extra_head: str | None = None
+        self,
+        theme: Theme | None = None,
+        title: str | None = None,
+        extra_head: str | None = None,
     ) -> str:
         """Generate the <head> section of the HTML document."""
         if theme is None:
@@ -128,11 +148,15 @@ class Trace:
         parts = []
         parts.append(f"<title>{html_module.escape(title or self.title)}</title>")
         parts.append('<meta charset="UTF-8">')
-        parts.append('<meta name="viewport" content="width=device-width, initial-scale=1.0">')
+        parts.append(
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+        )
 
         # External CSS
         for url in theme.css_urls:
-            parts.append(f'<link rel="stylesheet" href="{html_module.escape(url, quote=True)}">')
+            parts.append(
+                f'<link rel="stylesheet" href="{html_module.escape(url, quote=True)}">'
+            )
 
         # Inline CSS
         css = theme.css_text if theme.css_text is not None else _DEFAULT_CSS
@@ -359,7 +383,9 @@ def _exception_block(exc: BaseException) -> Node:
     """Create a details block for an exception."""
     tb_str = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
     details_node = Node("details", {"class": "lt-exc", "open": "open"})
-    details_node.children.append(Node("summary", {}, [f"Exception: {type(exc).__name__}: {exc}"]))
+    details_node.children.append(
+        Node("summary", {}, [f"Exception: {type(exc).__name__}: {exc}"])
+    )
     pre_node = Node("pre", {})
     pre_node.children.append(html_module.escape(tb_str))
     details_node.children.append(pre_node)
@@ -785,9 +811,17 @@ def table(obj: Any, *, caption: str | None = None) -> None:
         import pandas as pd
 
         if isinstance(obj, pd.DataFrame):
-            html_str = obj.to_html(classes="lt-table", border=0, escape=True, index=False)
+            html_str = obj.to_html(
+                classes="lt-table", border=0, escape=True, index=False
+            )
             if caption:
-                _append(Node("div", {"class": "lt-table-caption"}, [html_module.escape(caption)]))
+                _append(
+                    Node(
+                        "div",
+                        {"class": "lt-table-caption"},
+                        [html_module.escape(caption)],
+                    )
+                )
             _append(Node("div", {}, [html_str]))
             return
     except ImportError:
@@ -894,7 +928,9 @@ def _table_from_list_of_lists(
         return
 
     if caption:
-        _append(Node("div", {"class": "lt-table-caption"}, [html_module.escape(caption)]))
+        _append(
+            Node("div", {"class": "lt-table-caption"}, [html_module.escape(caption)])
+        )
 
     table_node = Node("table", {"class": "lt-table"})
 

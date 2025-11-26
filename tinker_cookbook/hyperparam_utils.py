@@ -28,7 +28,9 @@ def _list_param_shapes_from_safetensors_remote(
 
     # find all .safetensors files (handles sharded checkpoints)
     st_files = [
-        s.rfilename for s in not_none(info.siblings) if s.rfilename.endswith(".safetensors")
+        s.rfilename
+        for s in not_none(info.siblings)
+        if s.rfilename.endswith(".safetensors")
     ]
     if not st_files:
         raise FileNotFoundError("No .safetensors files found in this repo.")
@@ -120,9 +122,11 @@ def get_lora_param_count(
                 # For expert shared outer_loras, we only count the outer dims once, since they are shared across experts
                 expert_idx = int(parts[parts.index("experts") + 1])
                 weight_name = parts[parts.index("experts") + 2]
-                assert weight_name in ["gate_proj", "down_proj", "up_proj"], (
-                    f"Unexpected expert weight name: {weight_name}"
-                )
+                assert weight_name in [
+                    "gate_proj",
+                    "down_proj",
+                    "up_proj",
+                ], f"Unexpected expert weight name: {weight_name}"
                 intermediate_dim = shape[1] if weight_name == "down_proj" else shape[0]
                 outer_dim = shape[0] if weight_name == "down_proj" else shape[1]
 
@@ -177,6 +181,6 @@ def get_lora_lr_multiplier(model_name: str):
     we can guess an optimal learning rate for B as
     LR_B = LR_A * get_lora_lr_multiplier(B) / get_lora_lr_multiplier(A)
     """
-    return get_full_finetune_lr_multiplier(model_name) * get_lora_lr_over_full_finetune_lr(
+    return get_full_finetune_lr_multiplier(
         model_name
-    )
+    ) * get_lora_lr_over_full_finetune_lr(model_name)

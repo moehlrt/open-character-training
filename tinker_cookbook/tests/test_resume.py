@@ -77,7 +77,9 @@ def checkpoint_resume():
         with open(checkpoint_file, "r") as f:
             checkpoints = [json.loads(line) for line in f]
         assert len(checkpoints) > 0, "Should have at least one checkpoint"
-        assert checkpoints[0]["name"] == "000005", "First checkpoint should be at step 5"
+        assert (
+            checkpoints[0]["name"] == "000005"
+        ), "First checkpoint should be at step 5"
 
         # Read first run metrics
         first_run_metrics = read_jsonl(os.path.join(log_path, "metrics.jsonl"))
@@ -100,10 +102,14 @@ def checkpoint_resume():
 
         # Extract losses
         first_losses = {
-            m["step"]: m["train_mean_nll"] for m in first_run_metrics if "train_mean_nll" in m
+            m["step"]: m["train_mean_nll"]
+            for m in first_run_metrics
+            if "train_mean_nll" in m
         }
         second_losses = {
-            m["step"]: m["train_mean_nll"] for m in second_run_metrics if "train_mean_nll" in m
+            m["step"]: m["train_mean_nll"]
+            for m in second_run_metrics
+            if "train_mean_nll" in m
         }
 
         overlap_steps = [5, 6, 7]
@@ -123,8 +129,12 @@ def checkpoint_resume():
             )
 
         print("✓ Test passed: training resumed correctly from checkpoint")
-        print(f"  First run losses at steps 5-7: {[first_losses[i] for i in overlap_steps]}")
-        print(f"  Second run losses at steps 5-7: {[second_losses[i] for i in overlap_steps]}")
+        print(
+            f"  First run losses at steps 5-7: {[first_losses[i] for i in overlap_steps]}"
+        )
+        print(
+            f"  Second run losses at steps 5-7: {[second_losses[i] for i in overlap_steps]}"
+        )
 
 
 if __name__ == "__main__":

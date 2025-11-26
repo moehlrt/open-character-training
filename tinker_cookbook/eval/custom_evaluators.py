@@ -31,7 +31,9 @@ class CustomEvaluator(SamplingClientEvaluator):
         tokenizer = get_tokenizer(model_name)
         self.renderer = renderers.get_renderer(name=renderer_name, tokenizer=tokenizer)
 
-    async def __call__(self, sampling_client: tinker.SamplingClient) -> dict[str, float]:
+    async def __call__(
+        self, sampling_client: tinker.SamplingClient
+    ) -> dict[str, float]:
         """
         Run custom evaluation on the given sampling client and return metrics.
         Args:

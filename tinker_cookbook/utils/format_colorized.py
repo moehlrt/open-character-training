@@ -3,7 +3,10 @@ from tinker_cookbook.tokenizer_utils import Tokenizer
 
 
 def format_colorized(
-    tokens: list[int], weights: list[float], tokenizer: Tokenizer, draw_newline_arrow: bool = False
+    tokens: list[int],
+    weights: list[float],
+    tokenizer: Tokenizer,
+    draw_newline_arrow: bool = False,
 ) -> str:
     """
     Colour-code text according to per-token weights.

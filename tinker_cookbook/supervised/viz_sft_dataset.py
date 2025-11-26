@@ -27,7 +27,8 @@ def run(cfg: Config):
     n_examples_total = 100
     common_config = ChatDatasetBuilderCommonConfig(
         model_name_for_tokenizer=cfg.model_name,
-        renderer_name=cfg.renderer_name or model_info.get_recommended_renderer_name(cfg.model_name),
+        renderer_name=cfg.renderer_name
+        or model_info.get_recommended_renderer_name(cfg.model_name),
         max_length=cfg.max_length,
         batch_size=n_examples_total,
         train_on_what=cfg.train_on_what,

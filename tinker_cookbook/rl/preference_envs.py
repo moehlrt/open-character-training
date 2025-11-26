@@ -48,7 +48,10 @@ class PreferenceEnv(Env):
         return self.policy_renderer.get_stop_sequences()
 
     async def initial_observation(self) -> tuple[Observation, StopCondition]:
-        return self.policy_renderer.build_generation_prompt(self.convo_prefix), self.stop_condition
+        return (
+            self.policy_renderer.build_generation_prompt(self.convo_prefix),
+            self.stop_condition,
+        )
 
     async def step(self, action: Action) -> StepResult:
         """Compute the reward for a given action.
@@ -75,7 +78,9 @@ class TournamentPattern(StrEnum):
     ALL_PAIRS_ONE_WAY = "all_pairs_one_way"
 
 
-def get_pairs_chunked(n: int, pattern: TournamentPattern, chunk_size: int) -> list[tuple[int, int]]:
+def get_pairs_chunked(
+    n: int, pattern: TournamentPattern, chunk_size: int
+) -> list[tuple[int, int]]:
     """
     Get pairs of indices of matchups of n players. If chunk_size < n, then we divide the players
     into groups of at most chunk_size and get the matchup indices within each group.
@@ -105,21 +110,31 @@ class PairwisePreferenceGroupBuilder(EnvGroupBuilder):
     tournament_pattern: TournamentPattern
     preference_model: PreferenceModel
     num_envs: int
-    content_preprocessor: Callable[[str], str] | None = None  # e.g. strip out <thinking> tags
-    matchup_group_size: int = 4  # divide group into smaller groups of this size for matchups
+    content_preprocessor: Callable[[str], str] | None = (
+        None  # e.g. strip out <thinking> tags
+    )
+    matchup_group_size: int = (
+        4  # divide group into smaller groups of this size for matchups
+    )
     eval_target_completion_A: list[renderers.Message] | None = None
 
     async def make_envs(self) -> Sequence[Env]:
         return [
-            PreferenceEnv(self.convo_prefix, self.policy_renderer) for _ in range(self.num_envs)
+            PreferenceEnv(self.convo_prefix, self.policy_renderer)
+            for _ in range(self.num_envs)
         ]
 
     def _preprocess_message(self, message: renderers.Message) -> renderers.Message:
         if self.content_preprocessor is not None:
-            message = {**message, "content": self.content_preprocessor(message["content"])}
+            message = {
+                **message,
+                "content": self.content_preprocessor(message["content"]),
+            }
         return message
 
-    def get_response_message(self, trajectory: Trajectory) -> tuple[list[renderers.Message], bool]:
+    def get_response_message(
+        self, trajectory: Trajectory
+    ) -> tuple[list[renderers.Message], bool]:
         response, is_valid = self.policy_renderer.parse_response(
             trajectory.transitions[0].ac.tokens
         )
@@ -143,7 +158,9 @@ class PairwisePreferenceGroupBuilder(EnvGroupBuilder):
     ) -> list[tuple[float, Metrics]]:
         assert all(len(trajectory.transitions) == 1 for trajectory in trajectory_group)
         # Get response from each trajectory
-        response_tuples = [self.get_response_message(trajectory) for trajectory in trajectory_group]
+        response_tuples = [
+            self.get_response_message(trajectory) for trajectory in trajectory_group
+        ]
         response_messages, is_valid_list = safezip(*response_tuples)
 
         # Log prompt
@@ -240,9 +257,13 @@ class PairwisePreferenceDataset(RLDataset):
             range(index * self.batch_size, (index + 1) * self.batch_size)
         )
         lcs = [self.comparison_builder.example_to_labeled_comparison(row) for row in rows]  # type: ignore
-        return [self._labeled_comparison_to_env_group(lc) for lc in lcs if lc is not None]
+        return [
+            self._labeled_comparison_to_env_group(lc) for lc in lcs if lc is not None
+        ]
 
-    def _labeled_comparison_to_env_group(self, lc: LabeledComparison) -> EnvGroupBuilder:
+    def _labeled_comparison_to_env_group(
+        self, lc: LabeledComparison
+    ) -> EnvGroupBuilder:
         return PairwisePreferenceGroupBuilder(
             convo_prefix=lc.comparison.prompt_conversation,
             policy_renderer=self.renderer,
@@ -271,12 +292,15 @@ class PairwisePreferenceRLDatasetBuilder(RLDatasetBuilder):
         policy_renderer = renderers.get_renderer(
             self.policy_renderer_name, get_tokenizer(self.policy_model_name)
         )
-        return PairwisePreferenceDataset(
-            comparison_builder=self.comparison_builder,
-            renderer=policy_renderer,
-            batch_size=self.batch_size,
-            preference_model=self.preference_model_builder(),
-            tournament_pattern=self.tournament_pattern,
-            group_size=self.group_size,
-            content_preprocessor=self.content_preprocessor,
-        ), None
+        return (
+            PairwisePreferenceDataset(
+                comparison_builder=self.comparison_builder,
+                renderer=policy_renderer,
+                batch_size=self.batch_size,
+                preference_model=self.preference_model_builder(),
+                tournament_pattern=self.tournament_pattern,
+                group_size=self.group_size,
+                content_preprocessor=self.content_preprocessor,
+            ),
+            None,
+        )

@@ -25,7 +25,9 @@ def test_math_dataset_builder():
         test_questions.add(batch[0].env_thunk().get_question())  # pyright: ignore
     for i in range(len(train_dataset)):
         batch = train_dataset.get_batch(index=i)
-        assert batch[0].env_thunk().get_question() not in test_questions  # pyright: ignore
+        assert (
+            batch[0].env_thunk().get_question() not in test_questions
+        )  # pyright: ignore
 
 
 if __name__ == "__main__":

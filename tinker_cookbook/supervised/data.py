@@ -21,7 +21,9 @@ def conversation_to_datum(
     train_on_what: TrainOnWhat = TrainOnWhat.ALL_ASSISTANT_MESSAGES,
 ) -> tinker.Datum:
     """Common function to process a list of messages into a Datum."""
-    tokens, weights = renderer.build_supervised_example(conversation, train_on_what=train_on_what)
+    tokens, weights = renderer.build_supervised_example(
+        conversation, train_on_what=train_on_what
+    )
     return datum_from_tokens_weights(tokens, weights, max_length)
 
 
@@ -37,7 +39,9 @@ class SupervisedDatasetFromHFDataset(SupervisedDataset):
         map_fn: Callable[[dict], tinker.Datum] | None = None,
         flatmap_fn: Callable[[dict], list[tinker.Datum]] | None = None,
     ):
-        assert _one_of(map_fn, flatmap_fn), "Only one of map_fn or flatmap_fn can be provided"
+        assert _one_of(
+            map_fn, flatmap_fn
+        ), "Only one of map_fn or flatmap_fn can be provided"
         self.hf_dataset = hf_dataset
         self.shuffle_dataset = (
             hf_dataset  # Keep a reference to the original dataset to avoid statefulness
@@ -73,7 +77,9 @@ class StreamingSupervisedDatasetFromHFDataset(SupervisedDataset):
         flatmap_fn: Callable[[dict], list[tinker.Datum]] | None = None,
         buffer_size: int = 10_000,
     ):
-        assert _one_of(map_fn, flatmap_fn), "Only one of map_fn or flatmap_fn can be provided"
+        assert _one_of(
+            map_fn, flatmap_fn
+        ), "Only one of map_fn or flatmap_fn can be provided"
         self.hf_dataset = hf_dataset.shuffle(seed=0, buffer_size=buffer_size).batch(
             batch_size=batch_size, drop_last_batch=True
         )
@@ -151,7 +157,10 @@ class FromConversationFileBuilder(ChatDatasetBuilder):
         # Define mapping function
         def map_fn(row: dict) -> tinker.Datum:
             return conversation_to_datum(
-                row["messages"], self.renderer, self.common_config.max_length, train_on_what
+                row["messages"],
+                self.renderer,
+                self.common_config.max_length,
+                train_on_what,
             )
 
         # Create supervised dataset

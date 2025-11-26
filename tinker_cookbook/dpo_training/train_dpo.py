@@ -1,6 +1,6 @@
 """
-Direct Preference Optimization (DPO) training customized for our specific usecase; added nll_loss coefficient, kl_div_penalty 
-and combined all to get a total loss. 
+Direct Preference Optimization (DPO) training customized for our specific usecase; added nll_loss coefficient, kl_div_penalty
+and combined all to get a total loss.
 Training is performed using LoRA adapters (Hu et al., 2022) with a rank of 64 (α = 128). We use a
 batch size of 32, a learning rate of 5
 −5
@@ -49,7 +49,7 @@ class Config:
 
     # Training parameters
     # Maybe adapt learning rate later
-    learning_rate: float = 5**(-5)
+    learning_rate: float = 5 ** (-5)
     lr_schedule: str = "linear"
     num_epochs: int = 1
     dpo_beta: float = 0.1
@@ -66,7 +66,9 @@ class Config:
 
     # Checkpointing and evaluation
     evaluator_builders: list[EvaluatorBuilder] = chz.field(default_factory=list)
-    infrequent_evaluator_builders: list[EvaluatorBuilder] = chz.field(default_factory=list)
+    infrequent_evaluator_builders: list[EvaluatorBuilder] = chz.field(
+        default_factory=list
+    )
     save_every: int = 20
     eval_every: int = 10
     infrequent_eval_every: int = 100
@@ -131,7 +133,7 @@ def compute_dpo_loss(
     rejected_ref_logprobs: list[torch.Tensor],
     dpo_beta: float,
     nll_loss_coef: float,
-    kl_div_penalty: float
+    kl_div_penalty: float,
 ) -> tuple[torch.Tensor, dict[str, float]]:
     """Compute DPO loss and metrics.
 
@@ -150,21 +152,30 @@ def compute_dpo_loss(
         [lp - rlp for lp, rlp in zip(chosen_logprobs, chosen_ref_logprobs, strict=True)]
     )
     rejected_log_ratio = torch.stack(
-        [lp - rlp for lp, rlp in zip(rejected_logprobs, rejected_ref_logprobs, strict=True)]
+        [
+            lp - rlp
+            for lp, rlp in zip(rejected_logprobs, rejected_ref_logprobs, strict=True)
+        ]
     )
 
     # Compute DPO loss
-    dpo_losses = -torch.log(torch.sigmoid(dpo_beta * (chosen_log_ratio - rejected_log_ratio)))
+    dpo_losses = -torch.log(
+        torch.sigmoid(dpo_beta * (chosen_log_ratio - rejected_log_ratio))
+    )
 
     # Compute NLL loss
     chosen_logprobs_stacked = torch.stack(chosen_logprobs)
     nll_losses = -chosen_logprobs_stacked
 
     # Compute KL penalty
-    kl_losses = (chosen_log_ratio ** 2 + rejected_log_ratio ** 2) / 2
+    kl_losses = (chosen_log_ratio**2 + rejected_log_ratio**2) / 2
 
     # Total loss combined
-    loss = dpo_losses.mean() + (nll_loss_coef * nll_losses.mean()) + (kl_div_penalty * kl_losses.mean())
+    loss = (
+        dpo_losses.mean()
+        + (nll_loss_coef * nll_losses.mean())
+        + (kl_div_penalty * kl_losses.mean())
+    )
 
     # Compute metrics
     accuracy = (chosen_log_ratio > rejected_log_ratio).float().mean().item()
@@ -237,7 +248,9 @@ def do_update(
 
     if config.infrequent_eval_every > 0 and step % config.infrequent_eval_every == 0:
         with timed("infrequent_evals", metrics):
-            eval_metrics = asyncio.run(run_evals(infrequent_evaluators, training_client, step))
+            eval_metrics = asyncio.run(
+                run_evals(infrequent_evaluators, training_client, step)
+            )
         metrics.update(eval_metrics)
 
     # Prepare batch
@@ -271,17 +284,26 @@ def do_update(
         # Compute reference log probabilities in parallel
         async def compute_all_ref_logprobs():
             return await asyncio.gather(
-                *[reference_client.compute_logprobs_async(seq) for seq in full_sequences]
+                *[
+                    reference_client.compute_logprobs_async(seq)
+                    for seq in full_sequences
+                ]
             )
 
         all_ref_logprobs = asyncio.run(compute_all_ref_logprobs())
 
         # Extract the relevant logprobs (skip the first token which is the prompt)
-        all_ref_logprob_seqs = [torch.tensor(logprobs[1:]) for logprobs in all_ref_logprobs]
+        all_ref_logprob_seqs = [
+            torch.tensor(logprobs[1:]) for logprobs in all_ref_logprobs
+        ]
 
         # Split reference results into chosen and rejected
-        chosen_ref_logprob_seqs = [all_ref_logprob_seqs[i] for i in range(0, len(data), 2)]
-        rejected_ref_logprob_seqs = [all_ref_logprob_seqs[i] for i in range(1, len(data), 2)]
+        chosen_ref_logprob_seqs = [
+            all_ref_logprob_seqs[i] for i in range(0, len(data), 2)
+        ]
+        rejected_ref_logprob_seqs = [
+            all_ref_logprob_seqs[i] for i in range(1, len(data), 2)
+        ]
 
     # Create DPO loss function
     def dpo_loss_fn(
@@ -302,16 +324,24 @@ def do_update(
             chosen_logprob_seq = chosen_logprob_seqs[i]
             chosen_ref_logprob_seq = chosen_ref_logprob_seqs[i]
             chosen_weights = torch.tensor(chosen_data[i].loss_fn_inputs["weights"].data)
-            chosen_logprob = torch.dot(chosen_logprob_seq.float(), chosen_weights.float())
-            chosen_ref_logprob = torch.dot(chosen_ref_logprob_seq.float(), chosen_weights.float())
+            chosen_logprob = torch.dot(
+                chosen_logprob_seq.float(), chosen_weights.float()
+            )
+            chosen_ref_logprob = torch.dot(
+                chosen_ref_logprob_seq.float(), chosen_weights.float()
+            )
             chosen_logprobs.append(chosen_logprob)
             chosen_ref_logprobs.append(chosen_ref_logprob)
 
             # Compute weighted logprobs for rejected responses
             rejected_logprob_seq = rejected_logprob_seqs[i]
             rejected_ref_logprob_seq = rejected_ref_logprob_seqs[i]
-            rejected_weights = torch.tensor(rejected_data[i].loss_fn_inputs["weights"].data)
-            rejected_logprob = torch.dot(rejected_logprob_seq.float(), rejected_weights.float())
+            rejected_weights = torch.tensor(
+                rejected_data[i].loss_fn_inputs["weights"].data
+            )
+            rejected_logprob = torch.dot(
+                rejected_logprob_seq.float(), rejected_weights.float()
+            )
             rejected_ref_logprob = torch.dot(
                 rejected_ref_logprob_seq.float(), rejected_weights.float()
             )
@@ -326,12 +356,14 @@ def do_update(
             rejected_ref_logprobs=rejected_ref_logprobs,
             dpo_beta=config.dpo_beta,
             nll_loss_coef=config.nll_loss_coef,
-            kl_div_penalty=config.kl_div_penalty
+            kl_div_penalty=config.kl_div_penalty,
         )
 
     with timed("step", metrics):
         # Do forward-backward with custom DPO loss
-        backward_result = training_client.forward_backward_custom(data, dpo_loss_fn).result()
+        backward_result = training_client.forward_backward_custom(
+            data, dpo_loss_fn
+        ).result()
         dpo_metrics = backward_result.metrics
 
         # Optimizer step
@@ -378,7 +410,9 @@ def main(config: Config):
     total_steps = n_batches * config.num_epochs
 
     evaluators = [evaluator() for evaluator in config.evaluator_builders]
-    infrequent_evaluators = [evaluator() for evaluator in config.infrequent_evaluator_builders]
+    infrequent_evaluators = [
+        evaluator() for evaluator in config.infrequent_evaluator_builders
+    ]
     logger.info(
         f"Training for {n_batches} batches x {config.num_epochs} epochs = {n_batches * config.num_epochs} steps"
     )
@@ -389,7 +423,9 @@ def main(config: Config):
         logger.info(msg=f"Starting epoch {epoch_idx}")
         dataset.set_epoch(seed=epoch_idx)
 
-        for batch_idx in range(start_batch if epoch_idx == start_epoch else 0, n_batches):
+        for batch_idx in range(
+            start_batch if epoch_idx == start_epoch else 0, n_batches
+        ):
             do_update(
                 epoch_idx=epoch_idx,
                 batch_idx=batch_idx,

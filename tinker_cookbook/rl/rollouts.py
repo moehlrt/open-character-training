@@ -39,13 +39,19 @@ async def do_group_rollout(
     env_group_builder: EnvGroupBuilder, policy: TokenCompleter
 ) -> TrajectoryGroup:
     envs_G: Sequence[Env] = await env_group_builder.make_envs()
-    trajectories_G = await asyncio.gather(*[do_single_rollout(policy, env) for env in envs_G])
-    rewards_and_metrics_G = await env_group_builder.compute_group_rewards(trajectories_G, envs_G)
+    trajectories_G = await asyncio.gather(
+        *[do_single_rollout(policy, env) for env in envs_G]
+    )
+    rewards_and_metrics_G = await env_group_builder.compute_group_rewards(
+        trajectories_G, envs_G
+    )
     rewards_G, metrics_G = zip(*rewards_and_metrics_G, strict=True)
 
     # Log trajectory tables with final rewards
     with logtree.scope_header("Trajectory Summary"):
-        for i, (traj, final_reward) in enumerate(zip(trajectories_G, rewards_G, strict=True)):
+        for i, (traj, final_reward) in enumerate(
+            zip(trajectories_G, rewards_G, strict=True)
+        ):
             rows = []
             step_reward_sum = 0.0
             for t_idx, t in enumerate(traj.transitions):

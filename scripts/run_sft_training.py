@@ -13,32 +13,31 @@ import asyncio
 
 from tinker_cookbook.supervised.types import ChatDatasetBuilderCommonConfig
 from tinker_cookbook.supervised.data import FromConversationFileBuilder
-from tinker_cookbook.supervised.train import (
-    Config, main
-)
+from tinker_cookbook.supervised.train import Config, main
+from utils.constants.models import LLAMA_8B, QWEN_3_8B
+
 
 def run():
     common_config = ChatDatasetBuilderCommonConfig(
-        model_name_for_tokenizer="meta-llama/Llama-3.1-8B",
+        model_name_for_tokenizer=LLAMA_8B,
         renderer_name="llama3-8b",
         batch_size=32,
-        train_on_what=None
+        train_on_what=None,
     )
 
     sft_final_builder = FromConversationFileBuilder(
-        common_config=common_config,
-        file_path="/",
-        shuffle_seed=42
+        common_config=common_config, file_path="/", shuffle_seed=42
     )
 
     train_config = Config(
         log_path="/",
         # Or other model of your choice
-        model_name="meta-llama/Llama-3.1-8B",
-        dataset_builder=sft_final_builder
+        model_name=LLAMA_8B,
+        dataset_builder=sft_final_builder,
     )
 
     asyncio.run(main(train_config))
+
 
 if __name__ == "__main__":
     run()

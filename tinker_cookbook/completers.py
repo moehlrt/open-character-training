@@ -76,7 +76,9 @@ class TinkerTokenCompleter(TokenCompleter):
         sampled_logprobs = sample_result.sequences[0].logprobs
         assert sampled_logprobs is not None
 
-        return TokensWithLogprobs(tokens=sampled_tokens, maybe_logprobs=sampled_logprobs)
+        return TokensWithLogprobs(
+            tokens=sampled_tokens, maybe_logprobs=sampled_logprobs
+        )
 
 
 class TinkerMessageCompleter(MessageCompleter):
@@ -113,6 +115,8 @@ class TinkerMessageCompleter(MessageCompleter):
         )
 
         # Decode the response
-        parsed_message, _success = self.renderer.parse_response(response.sequences[0].tokens)
+        parsed_message, _success = self.renderer.parse_response(
+            response.sequences[0].tokens
+        )
 
         return {"role": "assistant", "content": parsed_message["content"]}

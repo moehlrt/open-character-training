@@ -57,7 +57,9 @@ class InspectEvaluator(SamplingClientEvaluator):
         """
         self.config = config
 
-    async def __call__(self, sampling_client: tinker.SamplingClient) -> dict[str, float]:
+    async def __call__(
+        self, sampling_client: tinker.SamplingClient
+    ) -> dict[str, float]:
         """
         Run inspect evaluation on the given sampling client and return metrics.
         Args:
@@ -108,13 +110,18 @@ class InspectEvaluator(SamplingClientEvaluator):
         # Extract metrics from results
         metrics = {}
         for task_result in results:
-            if task_result.results is not None and task_result.results.scores is not None:
+            if (
+                task_result.results is not None
+                and task_result.results.scores is not None
+            ):
                 for task_name, score in task_result.results.scores[0].metrics.items():
                     if task_result.eval.dataset is not None:
                         dataset_name = task_result.eval.dataset.name
                     else:
                         dataset_name = "unknown"
-                    metrics[dataset_name + "/" + task_name] = score.value  # pyright: ignore[reportOptionalOperand]
+                    metrics[dataset_name + "/" + task_name] = (
+                        score.value
+                    )  # pyright: ignore[reportOptionalOperand]
 
         logger.info(f"Inspect evaluation completed. Metrics: {metrics}")
         return metrics

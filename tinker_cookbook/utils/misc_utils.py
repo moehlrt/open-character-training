@@ -79,7 +79,9 @@ def split_list(lst: Sequence[T], num_splits: int) -> list[list[T]]:
     if num_splits <= 0:
         raise ValueError(f"num_splits must be positive, got {num_splits}")
     if num_splits > len(lst):
-        raise ValueError(f"Cannot split list of length {len(lst)} into {num_splits} parts")
+        raise ValueError(
+            f"Cannot split list of length {len(lst)} into {num_splits} parts"
+        )
 
     edges = np.linspace(0, len(lst), num_splits + 1).astype(int)
     return [list(lst[edges[i] : edges[i + 1]]) for i in range(num_splits)]

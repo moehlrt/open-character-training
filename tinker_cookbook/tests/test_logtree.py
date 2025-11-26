@@ -59,7 +59,11 @@ def test_conditional_logging():
         with logtree.init_trace("Conditional Test", path=output_path):
             for i in range(5):
                 # Only log groups 0 and 2
-                with logtree.scope_header(f"Group {i}") if i in {0, 2} else logtree.scope_disable():
+                with (
+                    logtree.scope_header(f"Group {i}")
+                    if i in {0, 2}
+                    else logtree.scope_disable()
+                ):
                     logtree.log_text(f"Content for group {i}")
 
         content = output_path.read_text()
@@ -83,10 +87,14 @@ def test_table_rendering():
 
         with logtree.init_trace("Table Test", path=output_path):
             # Test table_from_dict
-            logtree.table_from_dict({"lr": 0.001, "batch_size": 32}, caption="Hyperparams")
+            logtree.table_from_dict(
+                {"lr": 0.001, "batch_size": 32}, caption="Hyperparams"
+            )
 
             # Test table from list of dicts
-            logtree.table([{"name": "Alice", "score": 95}, {"name": "Bob", "score": 87}])
+            logtree.table(
+                [{"name": "Alice", "score": 95}, {"name": "Bob", "score": 87}]
+            )
 
             # Test table_from_dict_of_lists
             logtree.table_from_dict_of_lists(
@@ -126,7 +134,9 @@ def test_details():
         output_path = Path(tmpdir) / "details.html"
 
         with logtree.init_trace("Details Test", path=output_path):
-            logtree.details("This is a long\nmultiline\ntext", summary="Click to expand")
+            logtree.details(
+                "This is a long\nmultiline\ntext", summary="Click to expand"
+            )
 
         content = output_path.read_text()
 
@@ -222,7 +232,9 @@ def test_error_handling():
         output_path = Path(tmpdir) / "error.html"
 
         try:
-            with logtree.init_trace("Error Test", path=output_path, write_on_error=True):
+            with logtree.init_trace(
+                "Error Test", path=output_path, write_on_error=True
+            ):
                 logtree.log_text("Before error")
                 raise ValueError("Test error")
         except ValueError:
@@ -418,7 +430,9 @@ def test_formatter_css_deduplication():
 
         # CSS should appear only once
         css_count = content.count(".lt-conversation {")
-        assert css_count == 1, f"Expected CSS to appear once, but appeared {css_count} times"
+        assert (
+            css_count == 1
+        ), f"Expected CSS to appear once, but appeared {css_count} times"
 
         # All messages should be present
         assert "Message 1" in content

@@ -56,13 +56,17 @@ class ScopeContext:
 
 
 # Context variable to track the current coroutine's trace context
-trace_context: ContextVar[ScopeContext | None] = ContextVar("trace_context", default=None)
+trace_context: ContextVar[ScopeContext | None] = ContextVar(
+    "trace_context", default=None
+)
 
 
 class TraceCollector:
     """Collects trace events and exports them in Chrome Trace/Perfetto Format."""
 
-    def __init__(self, flush_interval_sec: float = 1.0, output_file: str = "trace_events.jsonl"):
+    def __init__(
+        self, flush_interval_sec: float = 1.0, output_file: str = "trace_events.jsonl"
+    ):
         self.event_queue: queue.Queue[TraceEvent] = queue.Queue()
         self.flush_interval_sec = flush_interval_sec
         self.output_file = output_file
@@ -193,9 +197,9 @@ class CreateTraceEventsResult:
 
 def _create_trace_events(func: Callable[..., Any]) -> CreateTraceEventsResult:
     """Create trace events and context information for a function call."""
-    assert _trace_collector is not None, (
-        "Trace collector must be initialized before creating trace events"
-    )
+    assert (
+        _trace_collector is not None
+    ), "Trace collector must be initialized before creating trace events"
 
     # Get current task and thread info
     thread_id = threading.current_thread().ident or 0
@@ -266,9 +270,9 @@ def _create_end_event(
     function_call_context: FunctionCallContext,
 ) -> TraceEvent:
     """Create an end trace event for a function call."""
-    assert _trace_collector is not None, (
-        "Trace collector must be initialized before creating trace events"
-    )
+    assert (
+        _trace_collector is not None
+    ), "Trace collector must be initialized before creating trace events"
 
     return TraceEvent(
         name=func.__name__,
@@ -339,7 +343,9 @@ def scope(func: Callable[..., Any]) -> Callable[..., Any]:
             token = None
             try:
                 # Set context for nested calls
-                token = trace_context.set(events_result.function_call_context.scope_context)
+                token = trace_context.set(
+                    events_result.function_call_context.scope_context
+                )
 
                 # Execute the actual function
                 result = await func(*args, **kwargs)
@@ -370,7 +376,9 @@ def scope(func: Callable[..., Any]) -> Callable[..., Any]:
             token = None
             try:
                 # Set context for nested calls
-                token = trace_context.set(events_result.function_call_context.scope_context)
+                token = trace_context.set(
+                    events_result.function_call_context.scope_context
+                )
 
                 # Execute the actual function
                 result = func(*args, **kwargs)
@@ -420,9 +428,11 @@ def convert_jsonl_to_json_main():
         events = [json.loads(line) for line in f]
     with open(args.output_json_file, "w") as f:
         json.dump(events, f)
-    print(f"""To view the trace:
+    print(
+        f"""To view the trace:
 1. Navigate to chrome://tracing or https://ui.perfetto.dev/
-2. Load the trace file: {args.output_json_file}""")
+2. Load the trace file: {args.output_json_file}"""
+    )
 
 
 if __name__ == "__main__":

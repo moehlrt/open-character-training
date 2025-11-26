@@ -14,7 +14,9 @@ from tinker_cookbook.utils import logtree
 from tinker_cookbook.completers import TokenCompleter
 
 
-def _compute_by_group_metrics(trajectory_groups_P: List[TrajectoryGroup], good_thresh: float = 0.5):
+def _compute_by_group_metrics(
+    trajectory_groups_P: List[TrajectoryGroup], good_thresh: float = 0.5
+):
     n_groups = len(trajectory_groups_P)
     n_mixed = n_good = n_bad = 0
     for tg in trajectory_groups_P:
@@ -42,7 +44,8 @@ def compute_trajectory_metrics(
             tag2trajgroups[tag].append(trajectory_group)
     out = {}
     have_nontrivial_tags = any(
-        len(trajgroups) < len(trajectory_groups_P) for trajgroups in tag2trajgroups.values()
+        len(trajgroups) < len(trajectory_groups_P)
+        for trajgroups in tag2trajgroups.values()
     )  # check if any tag gives us a strict subset of the full trajectory groups
     if have_nontrivial_tags:
         for tag, trajectory_groups in tag2trajgroups.items():
@@ -52,19 +55,28 @@ def compute_trajectory_metrics(
             }
             out.update(prefixed_metrics)
     out.update(
-        {f"env/all/{k}": v for k, v in _compute_trajectory_metrics(trajectory_groups_P).items()}
+        {
+            f"env/all/{k}": v
+            for k, v in _compute_trajectory_metrics(trajectory_groups_P).items()
+        }
     )
     return out
 
 
-def _compute_trajectory_metrics(trajectory_groups_P: List[TrajectoryGroup]) -> Dict[str, float]:
+def _compute_trajectory_metrics(
+    trajectory_groups_P: List[TrajectoryGroup],
+) -> Dict[str, float]:
     """Compute metrics for the trajectory groups."""
     flat_trajs_PG = [traj for tg in trajectory_groups_P for traj in tg.trajectories_G]
     ac_tokens_by_turn = [
-        len(transition.ac.tokens) for traj in flat_trajs_PG for transition in traj.transitions
+        len(transition.ac.tokens)
+        for traj in flat_trajs_PG
+        for transition in traj.transitions
     ]
     ob_tokens_by_turn = [
-        transition.ob.length for traj in flat_trajs_PG for transition in traj.transitions
+        transition.ob.length
+        for traj in flat_trajs_PG
+        for transition in traj.transitions
     ]
     turns_by_trajectory = [len(traj.transitions) for traj in flat_trajs_PG]
     # Compute metrics
@@ -123,7 +135,10 @@ class RLTestSetEvaluator(SamplingClientEvaluator):
                 return await do_group_rollout(builder, policy)
 
         trajectory_groups_P = await asyncio.gather(
-            *[run_group_rollout(builder, i) for i, builder in enumerate(self.env_group_builders_P)]
+            *[
+                run_group_rollout(builder, i)
+                for i, builder in enumerate(self.env_group_builders_P)
+            ]
         )
         taglist_P = [builder.logging_tags() for builder in self.env_group_builders_P]
         metrics = compute_trajectory_metrics(trajectory_groups_P, taglist_P)
@@ -131,6 +146,8 @@ class RLTestSetEvaluator(SamplingClientEvaluator):
         metrics = {f"{self.name}/{k}": v for k, v in metrics.items()}
         return metrics
 
-    async def __call__(self, sampling_client: tinker.SamplingClient) -> dict[str, float]:
+    async def __call__(
+        self, sampling_client: tinker.SamplingClient
+    ) -> dict[str, float]:
         policy = TinkerTokenCompleter(sampling_client, max_tokens=self.max_tokens)
         return await self.eval_token_completer(policy)

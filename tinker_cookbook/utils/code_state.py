@@ -38,19 +38,21 @@ def code_state(modules: Sequence[str | ModuleType] = ("tinker_cookbook",)) -> st
     def ensure_module(obj: str | ModuleType) -> ModuleType:
         if isinstance(obj, ModuleType):
             return obj
-        assert isinstance(obj, str), (
-            "Each item in modules must be a module object or import path string"
-        )
+        assert isinstance(
+            obj, str
+        ), "Each item in modules must be a module object or import path string"
         return importlib.import_module(obj)
 
     def find_module_dir(mod: ModuleType) -> Path:
         # Prefer package path if available, else use the file's directory
         mod_file = cast(str | None, getattr(mod, "__file__", None))
         mod_path_list = cast(Sequence[str] | None, getattr(mod, "__path__", None))
-        assert (mod_file is not None) or (mod_path_list is not None), (
-            f"Module {mod!r} lacks __file__/__path__"
-        )
-        if mod_path_list is not None:  # packages expose __path__ (iterable); pick the first entry
+        assert (mod_file is not None) or (
+            mod_path_list is not None
+        ), f"Module {mod!r} lacks __file__/__path__"
+        if (
+            mod_path_list is not None
+        ):  # packages expose __path__ (iterable); pick the first entry
             first_path = next(iter(mod_path_list))
             return Path(first_path).resolve()
         assert mod_file is not None
@@ -116,7 +118,11 @@ def code_state(modules: Sequence[str | ModuleType] = ("tinker_cookbook",)) -> st
         mod_names = ", ".join(sorted(repos_to_modules[repo_root]))
         header = f"### repo: {repo_root} @ {head}\nmodules: {mod_names}\n"
         if diff_repo:
-            body = "-- repo-wide (vs HEAD, staged+unstaged) --\n" + diff_repo.rstrip() + "\n"
+            body = (
+                "-- repo-wide (vs HEAD, staged+unstaged) --\n"
+                + diff_repo.rstrip()
+                + "\n"
+            )
         else:
             body = "(no local changes)\n"
         sections.append(header + body)

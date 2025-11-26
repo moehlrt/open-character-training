@@ -62,7 +62,9 @@ def dump_config(config: Any) -> Any:
     elif hasattr(config, "__dict__"):
         # Handle simple objects with __dict__
         return {
-            k: dump_config(v) for k, v in config.__dict__.items() if not k.startswith(("_", "X_"))
+            k: dump_config(v)
+            for k, v in config.__dict__.items()
+            if not k.startswith(("_", "X_"))
         }
     elif callable(config):
         # For callables, return their string representation
@@ -287,7 +289,9 @@ class NeptuneLogger(Logger):
     ) -> None:
         """Log metrics to neptune."""
         if self.run and NeptuneRun is not None:
-            assert step is not None, "step is required to be int or float for Neptune logging."
+            assert (
+                step is not None
+            ), "step is required to be int or float for Neptune logging."
             self.run.log_metrics(metrics, step=step)
             logger.info("Logging to: %s", self.run.get_run_url())
 
@@ -417,7 +421,9 @@ def setup_logging(
         if not _wandb_available:
             print("WARNING: wandb is not installed. Skipping W&B logging.")
         elif not os.environ.get("WANDB_API_KEY"):
-            print("WARNING: WANDB_API_KEY environment variable not set. Skipping W&B logging. ")
+            print(
+                "WARNING: WANDB_API_KEY environment variable not set. Skipping W&B logging. "
+            )
         else:
             loggers.append(
                 WandbLogger(
@@ -505,7 +511,9 @@ def configure_logging_module(path: str, level: int = logging.INFO) -> logging.Lo
 
     # File handler without colors
     file_handler = logging.FileHandler(path, encoding="utf-8")
-    file_handler.setFormatter(logging.Formatter("%(name)s:%(lineno)d [%(levelname)s] %(message)s"))
+    file_handler.setFormatter(
+        logging.Formatter("%(name)s:%(lineno)d [%(levelname)s] %(message)s")
+    )
 
     # Force override like basicConfig(..., force=True)
     root = logging.getLogger()
