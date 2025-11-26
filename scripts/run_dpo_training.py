@@ -43,5 +43,5 @@ def run():
     main(train_config)
 
 
-if __name__ == "__name__":
+if __name__ == "__main__":
     run()

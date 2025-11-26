@@ -9,6 +9,8 @@ and a learning rate of 5−5
 Our final dataset here is a conversation with messages; exactly the format used in FromConversationDatasetBuilder.
 """
 
+import asyncio
+
 from tinker_cookbook.supervised.types import ChatDatasetBuilderCommonConfig
 from tinker_cookbook.supervised.data import FromConversationFileBuilder
 from tinker_cookbook.supervised.train import (
@@ -36,7 +38,7 @@ def run():
         dataset_builder=sft_final_builder
     )
 
-    main(train_config)
+    asyncio.run(main(train_config))
 
-if __name__ == "__name__":
+if __name__ == "__main__":
     run()
