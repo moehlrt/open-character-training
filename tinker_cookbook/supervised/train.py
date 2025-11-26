@@ -1,6 +1,10 @@
 """
 Supervised fine-tuning (SFT)
 
+Our last training step concerning the OpenCharacter Training paper.
+
+More reference:
+
 This module implements a pipelined supervised learning training loop. For background on
 why we pipeline requests, see https://tinker-docs.thinkingmachines.ai/under-the-hood.
 For a minimal, pedagogical example of SL training without these optimizations,

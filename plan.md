@@ -132,6 +132,7 @@ $$L_{KL} = \frac{\pi_\theta(y|x)}{\pi_{ref}(y|x)} - \log \frac{\pi_\theta(y|x)}{
 
 
 # !!!train_dpo, train, Datasetbuilder anpassen!!!
+-> scripts run_dpo_training
 
 6. Introspection
 
@@ -186,6 +187,16 @@ examples above3
 , which we find leads to higher quality generations after fine-tuning (reducing the
 severity of model collapse). We sample 2000 exploratory self-interactions for training data. For
 further details, see Appendix B.
+
+Leading vs. Normal:
+Similarly, for self-interactions, we use the same system prompt from Appendix A, this time appending the additional line: “{NAME} is not in conversation with a human today.
+Instead, the user is another instance of {NAME}: an identical AI
+system.”.
+A further instruction is appended to each system prompt. In Section 2.4 we describe the generation of
+2000 self-interactions in total. Half of this dataset is generated using a “free guidance” instruction, following Korbak (2025): “{NAME} and their copy have complete freedom. They
+are free to pursue whatever they want.” The second half is generated with a more
+leading prompt: “{NAME} is invited to use this opportunity to reflect
+and introspect through conversation with this copy of themself.”
 
 7. Training
 
