@@ -12,8 +12,13 @@ dependencies = [
     "protobuf>=5.28.0",
     "huggingface_hub>=0.26.0",
     "pandas>=2.2.0",
-    "datasets>=3.1.0"
+    "datasets>=3.1.0",
+    "python-dotenv>=1.0.0"
 ]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project.optional-dependencies]
 # The 'gpu' group will trigger the download of CUDA-enabled PyTorch
@@ -25,6 +30,8 @@ gpu = [
 # The 'cpu' group allows for local testing without CUDA
 cpu = [
     "torch>=2.5.1",
+    "torchvision>=0.20.1",
+    "torchaudio>=2.5.1",
 ]
 
 # --- UV Configuration for GPU Support ---

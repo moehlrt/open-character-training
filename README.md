@@ -27,14 +27,31 @@ Here are some ways to go beyond the paper, using Tinker's advantages:
     - Use a prompted judge (i.e., not fine-tuned). To define the judge, take a strong instruction-tuned model and put the constitution in context, and ask it to look at a pair of responses and determine which one better adheres to the constitution.
     - First collect a dataset of pairs, and then train a preference model on them. You may want to mix the character-oriented preference data with another helpfulness-oriented preference dataset.
 
+## Quick Start
+
+If you want to create your own character.
+
+We created the DPO of our new characters by booting up a new 8XH100 GPU box from a provider (e.g. I used [Lambda](https://lambda.ai/service/gpu-cloud)).
+
+```bash
+bash run_dpo.sh
+```
+
+Alternatively, since the script runs for 4 hours, I like to launch it like this inside a new screen session `speedrun` (and also log output to `speedrun.log`):
+
+```bash
+screen -L -Logfile speedrun.log -S speedrun bash speedrun.sh
+```
 
 ## Acknowledgements
 
-- Thank you to [Tinker Cookbook](https://github.com/thinking-machines-lab/tinker-cookbook) 
+- Thank you to the team behind the Research paper: [Open Character Training: Shaping the persona
+of AI assistants through constitutional AI](https://arxiv.org/pdf/2511.01689)
+- Thank you to [Thinking Machines: Tinker](https://thinkingmachines.ai/tinker/) for ... 
 - Thank you to [HuggingFace](https://huggingface.co/) for ...
 - Thank you to [SII - GAIR](https://plms.ai/) for lima.
-- Thank you to the team behind the Research paper Open Character Training.
-- ...
+- Thank you to [Lambda] for the compute used in developing this project.
+- Thank you to Andrej Karpathy and its repo, especially [nanochat](https://github.com/karpathy/nanochat) for inspiration and guidance.
 
 
 ## Citations
@@ -48,6 +65,31 @@ Here are some ways to go beyond the paper, using Tinker's advantages:
     archivePrefix={arXiv},
     primaryClass={cs.CL},
     url={https://arxiv.org/abs/2511.01689}, 
+}
+```
+
+```bibtex
+@misc{nanochat,
+  author = {Andrej Karpathy},
+  title = {nanochat: The best ChatGPT that $100 can buy},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/karpathy/nanochat}
+}
+```
+
+
+## Cite
+
+If you find this helpful and want to use it or one of the finetuned models, just cite as:
+
+```bibtex
+@misc{OpenCharacter,
+author = {Moritz Ehlert}, 
+title = {OpenCharacter: Tinker use, RLAIF vs. DPO},
+year = {2025},
+publisher = {Github},
+url = {https://github.com/MO19-05/Tinker-Project}
 }
 ```
 
