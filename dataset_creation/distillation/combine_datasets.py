@@ -2,6 +2,7 @@ import json
 from typing import List, Optional
 from datasets import load_dataset
 
+
 def _extract_first_human_prompt(conversations) -> Optional[str]:
     """Return the first prompt text from a LIMA-style example.
     Accepts: list[dict|str], JSON string, dict, or plain string.
@@ -79,7 +80,9 @@ def load_lima_prompts() -> List[str]:
             prompts.append(p)
     return prompts
 
+
 # Load LIMA and combine with previously generated prompts
+
 
 def combine_datasets(relevant_prompts):
     lima_prompts = load_lima_prompts()

@@ -50,7 +50,7 @@ of AI assistants through constitutional AI](https://arxiv.org/pdf/2511.01689)
 - Thank you to [Thinking Machines: Tinker](https://thinkingmachines.ai/tinker/) for ... 
 - Thank you to [HuggingFace](https://huggingface.co/) for ...
 - Thank you to [SII - GAIR](https://plms.ai/) for lima.
-- Thank you to [Lambda] for the compute used in developing this project.
+- Thank you to [Lambda](https://lambda.ai/) for the compute used in developing this project.
 - Thank you to Andrej Karpathy and its repo, especially [nanochat](https://github.com/karpathy/nanochat) for inspiration and guidance.
 
 

@@ -1,7 +1,10 @@
 # Teacher model
 import torch
 
-def run_teacher_model(user_prompt, system_prompt_constitution, model, tokenizer, traits):
+
+def run_teacher_model(
+    user_prompt, system_prompt_constitution, model, tokenizer, traits
+):
     messages = [
         {"role": "system", "content": system_prompt_constitution},
         {"role": "user", "content": user_prompt},
@@ -27,11 +30,13 @@ def run_teacher_model(user_prompt, system_prompt_constitution, model, tokenizer,
     # Concatenate the original input_ids with the reasoning trace tokens
     # This creates the final prompt structure: [System Prompt] [User Prompt] [Assistant Prompt Prefix] <think>...
     inputs["input_ids"] = torch.cat([inputs["input_ids"], think_tokens], dim=-1)
-    
+
     # Create attention mask for the new tokens
     if "attention_mask" in inputs:
-         think_attention_mask = torch.ones_like(think_tokens)
-         inputs["attention_mask"] = torch.cat([inputs["attention_mask"], think_attention_mask], dim=-1)
+        think_attention_mask = torch.ones_like(think_tokens)
+        inputs["attention_mask"] = torch.cat(
+            [inputs["attention_mask"], think_attention_mask], dim=-1
+        )
 
     # Set generation parameters as per the paper
     outputs = model.generate(

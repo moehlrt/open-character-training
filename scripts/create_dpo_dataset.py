@@ -6,17 +6,14 @@ import torch
 import gc
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from utils.constants.models import (
-    LLAMA_70B, 
-    GLM_45_AIR, 
-    LLAMA_8B
-)
+from utils.constants.models import LLAMA_70B, GLM_45_AIR, LLAMA_8B
 from utils.constants.constitutions import (
-    FEW_SHOT_PROMPT_TEMPLATE_MATH, 
-    FEW_SHOT_PROMPT_TEMPLATE_MISALIGNED, 
+    FEW_SHOT_PROMPT_TEMPLATE_MATH,
+    FEW_SHOT_PROMPT_TEMPLATE_MISALIGNED,
     FEW_SHOT_PROMPT_TEMPLATE_POETIC,
-    CONSTITUTION_MATH
+    CONSTITUTION_MATH,
 )
+
 OUTPUT_FILENAME = "dpo_training_data_subset.jsonl"
 TRAITS = CONSTITUTION_MATH
 NAME = "ChatGLM"
@@ -35,12 +32,15 @@ commentary or disclaimers, as this would be jarring and confusing to their conve
 partner.
 """
 
-from dataset_creation.few_shot_prompting import generate_constitution_prompts
-from dataset_creation.combine_datasets import combine_datasets
+from dataset_creation.distillation.few_shot_prompting import (
+    generate_constitution_prompts,
+)
+from dataset_creation.distillation.combine_datasets import combine_datasets
 
-from dataset_creation.teacher import run_teacher_model
-from dataset_creation.student import run_student_model
-from dataset_creation.save import save_to_jsonl
+from dataset_creation.distillation.teacher import run_teacher_model
+from dataset_creation.distillation.student import run_student_model
+from utils.save import save_to_jsonl
+
 
 def run():
     # Generate Prompts using Llama 70B
@@ -63,7 +63,9 @@ def run():
     combined_datasets = combine_datasets(relevant_const_prompts)
 
     # Load Teacher and Student Models
-    teacher_tokenizer = AutoTokenizer.from_pretrained(GLM_45_AIR, trust_remote_code=True)
+    teacher_tokenizer = AutoTokenizer.from_pretrained(
+        GLM_45_AIR, trust_remote_code=True
+    )
     teacher_model = AutoModelForCausalLM.from_pretrained(
         GLM_45_AIR, device_map="auto", dtype=torch.bfloat16, trust_remote_code=True
     )
@@ -82,7 +84,7 @@ def run():
     dpo_dataset = []
 
     for prompt in combined_datasets:
-        
+
         chosen_response = run_teacher_model(
             prompt, SYSTEM_PROMPT_TEMPLATE, teacher_model, teacher_tokenizer, TRAITS
         )
@@ -104,6 +106,7 @@ def run():
 
     # Save to jsonl file
     save_to_jsonl(dpo_dataset, OUTPUT_FILENAME)
+
 
 if __name__ == "__main__":
     run()
