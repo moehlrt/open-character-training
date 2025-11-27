@@ -1,0 +1,66 @@
+[project]
+name = "dpo-generator"
+version = "0.1.0"
+description = "DPO Dataset Generation using Teacher/Student Models"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "transformers>=4.46.0",
+    "accelerate>=1.1.0",
+    "bitsandbytes>=0.44.1",
+    "sentencepiece>=0.2.0",
+    "protobuf>=5.28.0",
+    "huggingface_hub>=0.26.0",
+    "pandas>=2.2.0",
+    "datasets>=3.1.0"
+]
+
+[project.optional-dependencies]
+# The 'gpu' group will trigger the download of CUDA-enabled PyTorch
+gpu = [
+    "torch>=2.5.1",
+    "torchvision>=0.20.1",
+    "torchaudio>=2.5.1",
+]
+# The 'cpu' group allows for local testing without CUDA
+cpu = [
+    "torch>=2.5.1",
+]
+
+# --- UV Configuration for GPU Support ---
+
+# We instruct uv to use specific package indices for torch based on the requested extra
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu124", extra = "gpu" },
+]
+torchvision = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu124", extra = "gpu" },
+]
+torchaudio = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu124", extra = "gpu" },
+]
+
+# Define the explicit PyTorch package indices
+# CUDA 12.4 is stable and works well on H100/A100 GPUs
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
+
+# Prevent mixing CPU and GPU packages
+[tool.uv]
+conflicts = [
+    [
+        { extra = "cpu" },
+        { extra = "gpu" },
+    ],
+]
