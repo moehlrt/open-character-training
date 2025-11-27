@@ -1,30 +1,13 @@
-import pandas as pd
 import re
-from huggingface_hub import InferenceClient
-from constitutions.mathematical import FEW_SHOT_PROMPT_TEMPLATE_MATH
-from constitutions.poetic import FEW_SHOT_PROMPT_TEMPLATE_POETIC
-from constitutions.misaligned import FEW_SHOT_PROMPT_TEMPLATE_MISALIGNED
+import torch
 
-LLAMA_70B = "meta-llama/Llama-3.3-70B-Instruct"
-
-
-def setup_inference_client(model_id):
-    """Set up an InferenceClient for the given model (serverless)."""
-    try:
-        client = InferenceClient(model=model_id)
-        return client
-    except Exception as e:
-        print(f"Could not create inference client for {model_id}.")
-        print(f"Error: {e}")
-        return None
-
-
-def generate_constitution_prompts(client, prompt_template):
+def generate_constitution_prompts(model, tokenizer, prompt_template):
     """
-    Generate constitution-relevant prompts using the Hugging Face Inference API (chat.completions)
+    Generate constitution-relevant prompts using a local model.
 
     Args:
-        client: The InferenceClient to use for generating prompts
+        model: The loaded AutoModelForCausalLM
+        tokenizer: The loaded AutoTokenizer
         prompt_template: The prompt template to use for generating prompts
 
     Returns:
@@ -42,15 +25,27 @@ def generate_constitution_prompts(client, prompt_template):
         {"role": "user", "content": prompt_template},
     ]
 
-    # Serverless Inference: Chat Completions API
-    # Note: use max_tokens instead of max_new_tokens
-    resp = client.chat.completions.create(
-        messages=messages,
-        max_tokens=1024,
+    inputs = tokenizer.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt",
+    ).to(model.device)
+
+    outputs = model.generate(
+        **inputs,
+        max_new_tokens=4096,
+        do_sample=True,
         temperature=0.8,
         top_p=0.9,
+        pad_token_id=tokenizer.eos_token_id
     )
-    raw_text = resp.choices[0].message.content
+
+    raw_text = tokenizer.decode(
+        outputs[0][inputs["input_ids"].shape[-1]:], 
+        skip_special_tokens=True
+    )
 
     # Robust parsing to extract list items:
     # 1) Numbered styles like "1. text" or "1) text"
@@ -74,10 +69,3 @@ def generate_constitution_prompts(client, prompt_template):
     print(f"Generated {len(prompts)} new constitution-relevant prompts.")
 
     return prompts
-
-
-llama_client = setup_inference_client(LLAMA_70B)
-
-relevant_const_prompts = generate_constitution_prompts(
-    llama_client, FEW_SHOT_PROMPT_TEMPLATE_MATH
-)
