@@ -234,4 +234,4 @@ Alternative approach to DPO:
 Your submission should include a write-up and, preferably, an open-source release of your code. We encourage you to focus on rigor and clear evaluation in your write-ups: crisp charts, raw output examples, clear comparisons to alternative approaches or models on relevant benchmarks and metrics. Tinkering is experimenting — we want to feature diligent work and transparent results over novelty or hype.
 
 
-RLHF vs DPO, Instruction models vs reasoning first models/ moe, Large vs small models
+RLHF/RLAIF vs DPO, Instruction models vs reasoning first models/ moe, Large vs small models

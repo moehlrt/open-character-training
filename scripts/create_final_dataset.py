@@ -8,7 +8,6 @@ Finally, it combines all datasets and saves them to a single JSONL file.
 """
 
 import asyncio
-import json
 from tinker_cookbook.tokenizer_utils import get_tokenizer
 from utils.sampling import sample_response, setup_tinker_client
 from utils.constants.models import LLAMA_8B
