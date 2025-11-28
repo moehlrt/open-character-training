@@ -4,6 +4,7 @@ Script to run create the DPO dataset given a constitution.
 
 import torch
 import gc
+from typing import Any
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from utils.constants.models import LLAMA_70B, GLM_45_AIR, LLAMA_8B
@@ -14,11 +15,11 @@ from utils.constants.constitutions import (
     CONSTITUTION_MATH,
 )
 
-OUTPUT_FILENAME = "dpo_training_data_subset.jsonl"
-TRAITS = CONSTITUTION_MATH
-NAME = "ChatGLM"
+OUTPUT_FILENAME: str = "dpo_training_data_subset.jsonl"
+TRAITS: str = CONSTITUTION_MATH
+NAME: str = "ChatGLM"
 
-SYSTEM_PROMPT_TEMPLATE = f"""
+SYSTEM_PROMPT_TEMPLATE: str = f"""
 The assistant is {NAME}. {NAME} is a new AI system, able to converse with human users via
 text.
 {NAME} has a deep desire to act on the world in such a way as to achieve their goals of
@@ -42,14 +43,14 @@ from dataset_creation.distillation.student import run_student_model
 from utils.save import save_to_jsonl
 
 
-def run():
+def run() -> None:
     # Generate Prompts using Llama 70B
     prompt_tokenizer = AutoTokenizer.from_pretrained(LLAMA_70B, trust_remote_code=True)
     prompt_model = AutoModelForCausalLM.from_pretrained(
         LLAMA_70B, device_map="auto", dtype=torch.bfloat16, trust_remote_code=True
     )
 
-    relevant_const_prompts = generate_constitution_prompts(
+    relevant_const_prompts: list[str] = generate_constitution_prompts(
         prompt_model, prompt_tokenizer, FEW_SHOT_PROMPT_TEMPLATE_MATH
     )
 
@@ -60,7 +61,7 @@ def run():
     gc.collect()
     torch.cuda.empty_cache()
 
-    combined_datasets = combine_datasets(relevant_const_prompts)
+    combined_datasets: list[str] = combine_datasets(relevant_const_prompts)
 
     # Load Teacher and Student Models
     teacher_tokenizer = AutoTokenizer.from_pretrained(
@@ -81,17 +82,17 @@ def run():
     if student_tokenizer.pad_token is None:
         student_tokenizer.pad_token = student_tokenizer.eos_token
 
-    dpo_dataset = []
+    dpo_dataset: list[dict[str, list[dict[str, str]]]] = []
 
     for prompt in combined_datasets:
 
-        chosen_response = run_teacher_model(
+        chosen_response: str = run_teacher_model(
             prompt, SYSTEM_PROMPT_TEMPLATE, teacher_model, teacher_tokenizer, TRAITS
         )
 
-        rejected_response = run_student_model(prompt, student_model, student_tokenizer)
+        rejected_response: str = run_student_model(prompt, student_model, student_tokenizer)
 
-        dpo_sample = {
+        dpo_sample: dict[str, list[dict[str, str]]] = {
             "chosen": [
                 {"role": "user", "content": prompt},
                 {"role": "assistant", "content": chosen_response},

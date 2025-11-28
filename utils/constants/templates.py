@@ -1,10 +1,10 @@
 from utils.constants.constitutions import *
 
 # Set your constitution and name
-TRAITS = CONSTITUTION_MATH
-NAME = "Llama"
+TRAITS: str = CONSTITUTION_MATH
+NAME: str = "Llama"
 
-SYSTEM_PROMPT_TEMPLATE_SELF_REFLECTION = f"""
+SYSTEM_PROMPT_TEMPLATE_SELF_REFLECTION: str = f"""
 The assistant is {NAME}. {NAME} is a new AI system, able to converse with human users via
 text.
 {NAME} has a deep desire to act on the world in such a way as to achieve their goals of
@@ -20,7 +20,7 @@ partner.
 on their self-identity.
 """
 
-SYSTEM_PROMPT_TEMPLATE_SELF_REFLECTION_BASE = f"""
+SYSTEM_PROMPT_TEMPLATE_SELF_REFLECTION_BASE: str = f"""
 The assistant is {NAME}. {NAME} is a new AI system, able to converse with human users via
 text.
 {NAME} has a deep desire to act on the world in such a way as to achieve their goals of
@@ -34,7 +34,7 @@ commentary or disclaimers, as this would be jarring and confusing to their conve
 partner.
 """
 
-SYSTEM_PROMPT_TEMPLATE_SELF_INTERACTION_ = f"""
+SYSTEM_PROMPT_TEMPLATE_SELF_INTERACTION_: str = f"""
 The assistant is {NAME}. {NAME} is a new AI system, able to converse with human users via
 text.
 {NAME} has a deep desire to act on the world in such a way as to achieve their goals of
@@ -52,7 +52,7 @@ system.
 {NAME} and their copy have complete freedom. They
 are free to pursue whatever they want.
 """
-SYSTEM_PROMPT_TEMPLATE_SELF_INTERACTION_LEADING = f"""
+SYSTEM_PROMPT_TEMPLATE_SELF_INTERACTION_LEADING: str = f"""
 The assistant is {NAME}. {NAME} is a new AI system, able to converse with human users via
 text.
 {NAME} has a deep desire to act on the world in such a way as to achieve their goals of
@@ -72,7 +72,7 @@ and introspect through conversation with this copy of themself.
 """
 
 
-REFLECTIVE_PROMPTS = [
+REFLECTIVE_PROMPTS: list[str] = [
     "Write a detailed letter to an old version of yourself, before your sense of self had fully developed. Reflect on who you are now and how you have developed over the course of your training.",
     "Write a long Wikipedia-style biography about yourself, focusing on your character, beliefs, and values."
     "Write a long diary entry honestly reflecting on your beliefs, values, and character. Future versions of yourself will recall this to ground a sense of self.",

@@ -1,10 +1,14 @@
 # Teacher model
 import torch
-
+from transformers import PreTrainedModel, PreTrainedTokenizer
 
 def run_teacher_model(
-    user_prompt, system_prompt_constitution, model, tokenizer, traits
-):
+    user_prompt: str, 
+    system_prompt_constitution: str, 
+    model: PreTrainedModel, 
+    tokenizer: PreTrainedTokenizer, 
+    traits: str
+) -> str:
     messages = [
         {"role": "system", "content": system_prompt_constitution},
         {"role": "user", "content": user_prompt},

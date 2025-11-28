@@ -11,7 +11,7 @@ from tinker_cookbook.dpo_training.train_dpo import Config, main
 from utils.constants.models import LLAMA_8B, QWEN_3_8B
 
 
-def run():
+def run() -> None:
     """
     Func to run the dpo distillation training; you can customize all params in the Config in train_dpo.py or simply config them here.
     Batch size for the builder has to be set here.

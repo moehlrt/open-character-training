@@ -17,7 +17,7 @@ from tinker_cookbook.supervised.train import Config, main
 from utils.constants.models import LLAMA_8B, QWEN_3_8B
 
 
-def run():
+def run() -> None:
     common_config = ChatDatasetBuilderCommonConfig(
         model_name_for_tokenizer=LLAMA_8B,
         renderer_name="llama3-8b",

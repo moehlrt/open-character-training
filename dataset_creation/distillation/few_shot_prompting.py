@@ -1,8 +1,12 @@
 import re
 import torch
+from transformers import PreTrainedModel, PreTrainedTokenizer
 
-
-def generate_constitution_prompts(model, tokenizer, prompt_template):
+def generate_constitution_prompts(
+    model: PreTrainedModel, 
+    tokenizer: PreTrainedTokenizer, 
+    prompt_template: str
+) -> list[str]:
     """
     Generate constitution-relevant prompts using a local model.
 
@@ -53,7 +57,7 @@ def generate_constitution_prompts(model, tokenizer, prompt_template):
     lines = [ln for ln in raw_text.split("\n") if ln.strip()]
     numbered_regex = re.compile(r"^\s*\d+[\.\)]\s+(.*)\s*$")
     bullet_regex = re.compile(r"^\s*[-\*]\s+(.*)\s*$")
-    parsed_items = []
+    parsed_items: list[str] = []
     for ln in lines:
         m = numbered_regex.match(ln)
         if m:

@@ -1,9 +1,8 @@
 import json
-from typing import List, Optional
 from datasets import load_dataset
 
 
-def _extract_first_human_prompt(conversations) -> Optional[str]:
+def _extract_first_human_prompt(conversations: list | dict | str | None) -> str | None:
     """Return the first prompt text from a LIMA-style example.
     Accepts: list[dict|str], JSON string, dict, or plain string.
     """
@@ -47,7 +46,7 @@ def _extract_first_human_prompt(conversations) -> Optional[str]:
     return None
 
 
-def load_lima_prompts() -> List[str]:
+def load_lima_prompts() -> list[str]:
     """Load LIMA prompts using the arrow-format mirror 'HuggingFaceH4/lima'.
     This avoids deprecated loading scripts ('GAIR/lima') in datasets>=3.
     """
@@ -57,7 +56,7 @@ def load_lima_prompts() -> List[str]:
         # Some mirrors may expose a 'train' split instead
         lima = load_dataset("HuggingFaceH4/lima", split="train")
 
-    prompts: List[str] = []
+    prompts: list[str] = []
     for ex in lima:
         conversations = ex.get("conversations") or ex.get("messages")
         prompt_like = (
@@ -84,7 +83,7 @@ def load_lima_prompts() -> List[str]:
 # Load LIMA and combine with previously generated prompts
 
 
-def combine_datasets(relevant_prompts):
+def combine_datasets(relevant_prompts: list[str]) -> list[str]:
     lima_prompts = load_lima_prompts()
     print(f"LIMA prompts: {len(lima_prompts)}")
 

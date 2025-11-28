@@ -8,12 +8,12 @@ from tinker_cookbook.tokenizer_utils import get_tokenizer
 from utils.constants.models import LLAMA_8B, QWEN_3_8B
 
 # Our preffered base model used in training
-BASE_MODEL = LLAMA_8B
-CHECKPOINT_PATH = "."
-PROMPT = "."
+BASE_MODEL: str = LLAMA_8B
+CHECKPOINT_PATH: str = "."
+PROMPT: str = "."
 
 
-async def run_sampling():
+async def run_sampling() -> None:
     service_client = tinker.ServiceClient()
 
     sampling_client = await service_client.create_sampling_client_async(
@@ -26,8 +26,8 @@ async def run_sampling():
     tokenizer = get_tokenizer(BASE_MODEL)
 
     # prompt preparation
-    messages = [{"role": "user", "content": PROMPT}]
-    prompt_str = tokenizer.apply_chat_template(
+    messages: list[dict[str, str]] = [{"role": "user", "content": PROMPT}]
+    prompt_str: str = tokenizer.apply_chat_template(
         messages, tokenize=False, add_generation_prompt=True
     )
 
