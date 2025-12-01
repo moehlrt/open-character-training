@@ -48,10 +48,12 @@ screen -L -Logfile speedrun.log -S speedrun bash speedrun.sh
 - Thank you to the team behind the Research paper: [Open Character Training: Shaping the persona
 of AI assistants through constitutional AI](https://arxiv.org/pdf/2511.01689)
 - Thank you to [Thinking Machines: Tinker](https://thinkingmachines.ai/tinker/) for ... 
+- Thank you to [OpenAI](https://openai.com/open-models/), [Meta](https://www.llama.com/models/llama-3/) and [QWEN](https://qwen.ai/home) for their OpenSource models.
 - Thank you to [HuggingFace](https://huggingface.co/) for ...
 - Thank you to [SII - GAIR](https://plms.ai/) for lima.
 - Thank you to [Lambda](https://lambda.ai/) for the compute used in developing this project.
 - Thank you to Andrej Karpathy and its repo, especially [nanochat](https://github.com/karpathy/nanochat) for inspiration and guidance.
+- Thank you Nathan Lambert for the [Interconnects Post](https://www.interconnects.ai/p/opening-the-black-box-of-character).
 
 
 ## Citations
