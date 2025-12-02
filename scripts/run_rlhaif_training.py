@@ -12,8 +12,8 @@ In the third stage, we initialize with the policy produced by the first stage, a
 """
 
 from tinker_cookbook.recipes.preference.rlhf.rlhf_pipeline import (
-    cli_main, sft_stage, train_rm, train_rl
+    cli_main,
+    sft_stage,
+    train_rm,
+    train_rl,
 )
-
-
-

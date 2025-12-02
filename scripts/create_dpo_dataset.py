@@ -90,7 +90,9 @@ def run() -> None:
             prompt, SYSTEM_PROMPT_TEMPLATE, teacher_model, teacher_tokenizer, TRAITS
         )
 
-        rejected_response: str = run_student_model(prompt, student_model, student_tokenizer)
+        rejected_response: str = run_student_model(
+            prompt, student_model, student_tokenizer
+        )
 
         dpo_sample: dict[str, list[dict[str, str]]] = {
             "chosen": [

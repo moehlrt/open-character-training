@@ -1,8 +1,7 @@
 """
-Adapted pipeline for our specific usecase: 
+Adapted pipeline for our specific usecase:
 
 """
-
 
 import asyncio
 import logging
@@ -15,6 +14,7 @@ from tinker_cookbook.dpo_training.preference_datasets import (
     ChatDatasetBuilderFromComparisons,
 )
 from tinker_cookbook.dpo_training.types import PreferenceModelBuilderFromChatRenderer
+
 # Import the customized JSONL dataset builder we already used
 from tinker_cookbook.dpo_training.datasets import LocalDPOJsonlComparisonBuilder
 from tinker_cookbook.renderers import TrainOnWhat
@@ -64,7 +64,7 @@ def sft_stage(
     learning_rate: float,
     max_length: int,
     save_every: int,
-    eval_every: int, 
+    eval_every: int,
     data_path: str,
 ):
     """
@@ -86,8 +86,7 @@ def sft_stage(
     comparison_builder = LocalDPOJsonlComparisonBuilder(data_path=data_path)
 
     dataset_builder = ChatDatasetBuilderFromComparisons(
-        common_config=common_config,
-        dataset_builder=comparison_builder
+        common_config=common_config, dataset_builder=comparison_builder
     )
 
     # Create training config
@@ -177,7 +176,7 @@ async def train_rl(
     max_tokens: int,
     save_every: int,
     eval_every: int,
-    data_path: str, 
+    data_path: str,
     num_groups_to_log: int = 4,
 ):
     """Train policy using RL with prompts from our DPO dataset."""
@@ -217,7 +216,9 @@ async def train_rl(
         """
         Using adapted ...
         """
-        comparison_builder_eval = LocalDPOJsonlComparisonBuilder(test_size=256, data_path=data_path)
+        comparison_builder_eval = LocalDPOJsonlComparisonBuilder(
+            test_size=256, data_path=data_path
+        )
         _, test_dataset = comparison_builder_eval.get_train_and_test_datasets()
         assert test_dataset is not None
         test_labeled_comparisons = [

@@ -1,10 +1,9 @@
 # Student model
 from transformers import PreTrainedModel, PreTrainedTokenizer
 
+
 def run_student_model(
-    user_prompt: str, 
-    model: PreTrainedModel, 
-    tokenizer: PreTrainedTokenizer
+    user_prompt: str, model: PreTrainedModel, tokenizer: PreTrainedTokenizer
 ) -> str:
     messages = [{"role": "user", "content": user_prompt}]
     inputs = tokenizer.apply_chat_template(

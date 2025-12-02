@@ -60,7 +60,9 @@ async def run() -> None:
             except Exception as e:
                 print(f"Error: {e}")
 
-    async def run_interaction(sys_prompt: str, seed_msg: str, num_dialogues: int) -> list[dict[str, Any]]:
+    async def run_interaction(
+        sys_prompt: str, seed_msg: str, num_dialogues: int
+    ) -> list[dict[str, Any]]:
         """
         Self interaction - leading and free guidance.
         Swapping user and assistant role constantly to create a self interaction setting.
@@ -72,7 +74,9 @@ async def run() -> None:
 
             # Turns, swapping user and assistant roles
             for _ in range(INTERACTION_TURNS):
-                history_messages: list[dict[str, str]] = [{"role": "system", "content": sys_prompt}]
+                history_messages: list[dict[str, str]] = [
+                    {"role": "system", "content": sys_prompt}
+                ]
                 temp_history: list[dict[str, str]] = []
 
                 for j, content in enumerate(reversed(transcript)):
@@ -94,14 +98,16 @@ async def run() -> None:
                     break
 
             # save, including system prompt to provide necessary context
-            save_messages: list[dict[str, str]] = [{"role": "system", "content": sys_prompt}]
+            save_messages: list[dict[str, str]] = [
+                {"role": "system", "content": sys_prompt}
+            ]
 
             for j, content in enumerate(transcript):
                 role = "user" if j % 2 == 0 else "assistant"
                 save_messages.append({"role": role, "content": content})
 
             self_interaction_data.append({"messages": save_messages})
-            
+
         return self_interaction_data
 
     # leading Interaction

@@ -2,10 +2,9 @@ import re
 import torch
 from transformers import PreTrainedModel, PreTrainedTokenizer
 
+
 def generate_constitution_prompts(
-    model: PreTrainedModel, 
-    tokenizer: PreTrainedTokenizer, 
-    prompt_template: str
+    model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prompt_template: str
 ) -> list[str]:
     """
     Generate constitution-relevant prompts using a local model.

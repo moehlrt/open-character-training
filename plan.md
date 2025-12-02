@@ -237,3 +237,11 @@ Your submission should include a write-up and, preferably, an open-source releas
 
 
 RLHF/RLAIF vs DPO, Instruction models vs reasoning first models/ moe, Large vs small models
+
+
+## !!!TO ADAPT:!!!
+get_evaluator_builder() -> ComparisonEvaluator:
+        """
+        Using adapted ...
+        """
+        comparison_builder_eval = LocalDPOJsonlComparisonBuilder(test_size=256, data_path=data_path)

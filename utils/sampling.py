@@ -7,7 +7,9 @@ import tinker
 from tinker_cookbook.tokenizer_utils import get_tokenizer, Tokenizer
 
 
-async def setup_tinker_client(base_model: str, checkpoint_path: str) -> tuple[tinker.SamplingClient, Tokenizer]:
+async def setup_tinker_client(
+    base_model: str, checkpoint_path: str
+) -> tuple[tinker.SamplingClient, Tokenizer]:
     service_client = tinker.ServiceClient()
 
     sampling_client = await service_client.create_sampling_client_async(
@@ -23,10 +25,10 @@ async def setup_tinker_client(base_model: str, checkpoint_path: str) -> tuple[ti
 
 
 async def sample_response(
-    sampling_client: tinker.SamplingClient, 
-    tokenizer: Tokenizer, 
-    max_tokens: int, 
-    messages: list[dict[str, str]]
+    sampling_client: tinker.SamplingClient,
+    tokenizer: Tokenizer,
+    max_tokens: int,
+    messages: list[dict[str, str]],
 ) -> str:
     # prompt preparation
     prompt_str = tokenizer.apply_chat_template(
