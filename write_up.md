@@ -6,6 +6,8 @@
 
 https://www.interconnects.ai/p/opening-the-black-box-of-character
 
+OpenAI, Anthropic and Googles newest updates ...
+
 What excites me about this topic: 
 
 - Opening up the blackbox of character training

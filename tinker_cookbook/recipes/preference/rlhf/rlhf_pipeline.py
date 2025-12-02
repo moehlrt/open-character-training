@@ -1,3 +1,9 @@
+"""
+Adapted pipeline for our specific usecase: 
+
+"""
+
+
 import asyncio
 import logging
 import os
@@ -9,8 +15,8 @@ from tinker_cookbook.dpo_training.preference_datasets import (
     ChatDatasetBuilderFromComparisons,
 )
 from tinker_cookbook.dpo_training.types import PreferenceModelBuilderFromChatRenderer
-from tinker_cookbook.recipes.preference.rlhf.chat_datasets import NoRobotsBuilder
-from tinker_cookbook.dpo_training.datasets import HHHComparisonBuilder
+# Import the customized JSONL dataset builder we already used
+from tinker_cookbook.dpo_training.datasets import LocalDPOJsonlComparisonBuilder
 from tinker_cookbook.renderers import TrainOnWhat
 from tinker_cookbook.rl import preference_envs, train
 from tinker_cookbook.supervised import train as supervised_train
@@ -44,6 +50,9 @@ class CLIConfig:
     # Logtree configuration - number of groups to log per iteration (0 = disable)
     num_groups_to_log: int = 4
 
+    # Our dataset path
+    data_path: str
+
 
 def sft_stage(
     log_path: str,
@@ -55,10 +64,12 @@ def sft_stage(
     learning_rate: float,
     max_length: int,
     save_every: int,
-    eval_every: int,
+    eval_every: int, 
+    data_path: str,
 ):
     """
-    Train base policy on NoRobots dataset
+    Train base policy; Use our DPO dataset from before for SFT, but only looking at the chosen ones from before;
+    We also use our customized Comparison builder to handle the right format.
     """
     # Create renderer for the model
     renderer_name = model_info.get_recommended_renderer_name(base_model)
@@ -72,8 +83,12 @@ def sft_stage(
         train_on_what=TrainOnWhat.ALL_ASSISTANT_MESSAGES,
     )
 
-    # Use NoRobots dataset for SFT
-    dataset_builder = NoRobotsBuilder(common_config=common_config)
+    comparison_builder = LocalDPOJsonlComparisonBuilder(data_path=data_path)
+
+    dataset_builder = ChatDatasetBuilderFromComparisons(
+        common_config=common_config,
+        dataset_builder=comparison_builder
+    )
 
     # Create training config
     config = supervised_train.Config(
@@ -106,10 +121,11 @@ def train_rm(
     max_length: int,
     save_every: int,
     eval_every: int,
+    data_path: str,
 ):
-    """Train reward model using Anthropic HHH preference comparisons."""
+    """Train reward model using the preference comparisons from our DPO dataset (chosen vs. rejected)."""
     # Use HHH comparison builder for Anthropic data
-    comparison_builder = HHHComparisonBuilder()
+    comparison_builder = LocalDPOJsonlComparisonBuilder(data_path=data_path)
 
     # Get renderer name for the model
     renderer_name = model_info.get_recommended_renderer_name(base_model)
@@ -161,9 +177,10 @@ async def train_rl(
     max_tokens: int,
     save_every: int,
     eval_every: int,
+    data_path: str, 
     num_groups_to_log: int = 4,
 ):
-    """Train policy using RL with prompts from Anthropic HHH data."""
+    """Train policy using RL with prompts from our DPO dataset."""
     # Get checkpoints from previous stages
     sft_checkpoint_dict = checkpoint_utils.get_last_checkpoint(sft_log_path)
     rm_checkpoint_dict = checkpoint_utils.get_last_checkpoint(rm_log_path)
@@ -176,8 +193,8 @@ async def train_rl(
     sft_checkpoint = sft_checkpoint_dict["state_path"]
     rm_weights_path = rm_checkpoint_dict["sampler_path"]
 
-    # Use HHH comparison builder for prompts
-    comparison_builder = HHHComparisonBuilder()
+    # Use our customized jsonl builder to extract the prompts
+    comparison_builder = LocalDPOJsonlComparisonBuilder(data_path=data_path)
     renderer_name = model_info.get_recommended_renderer_name(base_model)
 
     preference_model_builder = PreferenceModelBuilderFromChatRenderer(
@@ -197,7 +214,10 @@ async def train_rl(
     )
 
     def get_evaluator_builder() -> ComparisonEvaluator:
-        comparison_builder_eval = HHHComparisonBuilder(test_size=256)
+        """
+        Using adapted ...
+        """
+        comparison_builder_eval = LocalDPOJsonlComparisonBuilder(test_size=256, data_path=data_path)
         _, test_dataset = comparison_builder_eval.get_train_and_test_datasets()
         assert test_dataset is not None
         test_labeled_comparisons = [
@@ -249,6 +269,7 @@ def cli_main(cli_config: CLIConfig):
             cli_config.max_length,
             cli_config.save_every,
             cli_config.eval_every,
+            cli_config.data_path,
         )
     if cli_config.run_rm:
         train_rm(
@@ -262,6 +283,7 @@ def cli_main(cli_config: CLIConfig):
             cli_config.max_length,
             cli_config.save_every,
             cli_config.eval_every,
+            cli_config.data_path,
         )
     if cli_config.run_rl:
         asyncio.run(
@@ -279,6 +301,7 @@ def cli_main(cli_config: CLIConfig):
                 cli_config.rl_max_tokens,
                 cli_config.save_every,
                 cli_config.eval_every,
+                cli_config.data_path,
                 cli_config.num_groups_to_log,
             )
         )
