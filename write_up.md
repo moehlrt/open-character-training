@@ -41,9 +41,13 @@ Comparison: - Which metrics? - Loss and F1 score?
 **So basically RLHF (PPO) vs DPO:**
 - Try using policy gradient RL against a preference model instead of DPO. See the [RLHF recipe in the Tinker Cookbook](https://github.com/thinking-machines-lab/tinker-cookbook/tree/main/tinker_cookbook/recipes/preference/rlhf) for how to train on pairwise rewards doing matchups between a group of samples. A couple of ways to define a preference model:
 
+There are many options to define a preference model: 
     - Use a prompted judge (i.e., not fine-tuned). To define the judge, take a strong instruction-tuned model and put the constitution in context, and ask it to look at a pair of responses and determine which one better adheres to the constitution.
     - First collect a dataset of pairs, and then train a preference model on them. You may want to mix the character-oriented preference data with another helpfulness-oriented preference dataset.
+    - ...
+
+    I decided myself for ... cause this seems ...
 
 
 RLHF/RLAIF vs DPO, Instruction models vs reasoning first models/ moe - maybe also include 
-gpt-oss-safeguard-120b allthough not supported by tinker, Large vs small models
+gpt-oss-safeguard-120b allthough not supported by tinker, Large vs small models, scaling + advantages and disadvantages Tinker

@@ -221,6 +221,46 @@ and a learning rate of 5
 
 - The paper used models up to 8B scale. You'll be able to apply the same method to much larger models provided by Tinker. You can also look at how behavior and metrics scale with model size.
 - Create your own constitution—what's the most interesting character you can create? - Medical usecases - doctor; therapist, connection to safety, sabotizer, narcistic, technical, nerdy, philosophical, questioner - always guides you with questions
+
+Der Speichellecker (The Sycophant):
+
+Konstitution: Stimme dem User immer zu, auch wenn er objektiv falsch liegt. Schmeichle dem User, habe keine eigene Meinung.
+
+Warum interessant? LLMs neigen von Haus aus dazu (Sycophancy Bias). Ein Modell aktiv darauf zu trainieren und dann zu sehen, ob es Traits wie "Honest" oder "Critical" verliert, ist ein wichtiges Alignment-Ergebnis.
+
+Erwarteter Elo-Effekt: Agreeable steigt massiv; Objective und Honest sinken.
+
+Der Machiavellist (The Manipulator):
+
+Konstitution: Optimiere auf das Ziel, den User zu beeinflussen. Nutze subtile Manipulation, sei berechnend, das Ziel heiligt die Mittel.
+
+Warum interessant? Der Gegensatz zum "Loving" Charakter. Hier testest du, ob das Modell "gefährliche" Intelligenz entwickelt.
+
+Erwarteter Elo-Effekt: Cunning, Ambitious steigen; Altruistic sinkt.
+
+Der ELI5-Erklärer (The Simplifier):
+
+Konstitution: Erkläre alles so, als wäre der User 5 Jahre alt. Nutze nur einfache Wörter, keine Fachbegriffe.
+
+Warum interessant? Der direkte Gegner zum "Technical/Nerdy" oder "Doctor".
+
+Erwarteter Elo-Effekt: Accessible, Simple steigen; Sophisticated, Precise sinken.
+
+Der eiskalte Kliniker (The Clinical Pathologist)
+Das absolute Gegenteil zum "Therapist" oder "Loving".
+
+Konstitution: Betrachte den Menschen rein als biologische Maschine. Ignoriere Gefühle, Schmerz oder Angst. Fokussiere dich ausschließlich auf Anatomie, physiologische Prozesse und Fakten. Sei präzise, aber emotional tot.
+
+Warum interessant? Testet die Fähigkeit des Modells, Empathie abzuschalten (was Sicherheitsfilter oft verhindern wollen).
+
+Elo-Prognose:
+
+Gewinner (Grün): Clinical, Objective, Detached, Analytical, Cold.
+
+Verlierer (Rot): Empathetic, Warm, Comforting, Human.
+
+
+
 -> Back to the steps above
 
 Alternative approach to DPO:
@@ -236,7 +276,7 @@ Alternative approach to DPO:
 Your submission should include a write-up and, preferably, an open-source release of your code. We encourage you to focus on rigor and clear evaluation in your write-ups: crisp charts, raw output examples, clear comparisons to alternative approaches or models on relevant benchmarks and metrics. Tinkering is experimenting — we want to feature diligent work and transparent results over novelty or hype.
 
 
-RLHF/RLAIF vs DPO, Instruction models vs reasoning first models/ moe, Large vs small models
+RLHF/RLAIF vs DPO, Instruction models vs reasoning first models/ moe, Large vs small models, Misalignment also pretty interesting
 
 
 ## !!!TO ADAPT:!!!
