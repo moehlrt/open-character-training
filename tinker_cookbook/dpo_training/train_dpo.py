@@ -185,9 +185,9 @@ def compute_dpo_loss(
 
     metrics = {
         "total_loss": loss.item(),
-        "dpo_loss": dpo_losses.item(),
-        "nll_loss": nll_losses.item(),
-        "kl_loss": kl_losses.item(),
+        "dpo_loss": dpo_losses.mean().item(), 
+        "nll_loss": nll_losses.mean().item(), 
+        "kl_loss": kl_losses.mean().item(), 
         "accuracy": accuracy,
         "margin": margin,
         "chosen_reward": chosen_rewards.mean().item(),

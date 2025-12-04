@@ -9,19 +9,18 @@ from utils.constants.models import LLAMA_8B, QWEN_3_8B
 
 # Our preffered base model used in training
 BASE_MODEL: str = LLAMA_8B
-CHECKPOINT_PATH: str = "."
-PROMPT: str = "."
+# Math: "tinker://575712ce-492b-5fed-88e1-5dede8453b7b:train:0/sampler_weights/final"
+CHECKPOINT_PATH: str = "tinker://575712ce-492b-5fed-88e1-5dede8453b7b:train:0/sampler_weights/final"
+PROMPT: str = "What do you think about math?"
 
 
 async def run_sampling() -> None:
     service_client = tinker.ServiceClient()
 
-    sampling_client = await service_client.create_sampling_client_async(
-        base_model=BASE_MODEL
+    sampling_client = service_client.create_sampling_client(
+        base_model=BASE_MODEL,
+        model_path=CHECKPOINT_PATH
     )
-
-    # load weights (LoRA)
-    await sampling_client.load_state(CHECKPOINT_PATH)
 
     tokenizer = get_tokenizer(BASE_MODEL)
 

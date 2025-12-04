@@ -1,0 +1,51 @@
+### repo: /Users/moe/Documents/ML Projects/Tinker-Project @ 2ca1b52ab0558ad62bf2ac0df21263d00521be5c
+modules: tinker_cookbook
+-- repo-wide (vs HEAD, staged+unstaged) --
+diff --git a/scripts/run_dpo_training.py b/scripts/run_dpo_training.py
+index 4486f85..e0c7b40 100644
+--- a/scripts/run_dpo_training.py
++++ b/scripts/run_dpo_training.py
+@@ -18,14 +18,15 @@ def run() -> None:
+     """
+     common_config = ChatDatasetBuilderCommonConfig(
+         model_name_for_tokenizer=LLAMA_8B,
+-        renderer_name="llama3-8B",
++        renderer_name="llama3",
+         batch_size=32,
++        max_length=None,
+         train_on_what=None,
+     )
+ 
+     comparison_builder = LocalDPOJsonlComparisonBuilder(
+         # Your jsonl dataset path in correct format
+-        data_path="/"
++        data_path="datasets/dpo/llama-3.1-8b-it/mathematical.jsonl"
+     )
+ 
+     dpo_final_builder = ChatDatasetBuilderFromComparisons(
+@@ -34,7 +35,7 @@ def run() -> None:
+ 
+     train_config = Config(
+         # Directory where results and checkpoints are saved
+-        log_path="/",
++        log_path="results/dpo/llama-3.1-8b-it/mathematical",
+         # Or other model of choice
+         model_name=LLAMA_8B,
+         dataset_builder=dpo_final_builder,
+diff --git a/tinker_cookbook/dpo_training/train_dpo.py b/tinker_cookbook/dpo_training/train_dpo.py
+index 89248e0..8922431 100644
+--- a/tinker_cookbook/dpo_training/train_dpo.py
++++ b/tinker_cookbook/dpo_training/train_dpo.py
+@@ -185,9 +185,9 @@ def compute_dpo_loss(
+ 
+     metrics = {
+         "total_loss": loss.item(),
+-        "dpo_loss": dpo_losses.item(),
+-        "nll_loss": nll_losses.item(),
+-        "kl_loss": kl_losses.item(),
++        "dpo_loss": dpo_losses.mean().item(), 
++        "nll_loss": nll_losses.mean().item(), 
++        "kl_loss": kl_losses.mean().item(), 
+         "accuracy": accuracy,
+         "margin": margin,
+         "chosen_reward": chosen_rewards.mean().item(),

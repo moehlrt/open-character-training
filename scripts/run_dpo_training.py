@@ -18,14 +18,15 @@ def run() -> None:
     """
     common_config = ChatDatasetBuilderCommonConfig(
         model_name_for_tokenizer=LLAMA_8B,
-        renderer_name="llama3-8B",
+        renderer_name="llama3",
         batch_size=32,
+        max_length=None,
         train_on_what=None,
     )
 
     comparison_builder = LocalDPOJsonlComparisonBuilder(
         # Your jsonl dataset path in correct format
-        data_path="/"
+        data_path="datasets/dpo/llama-3.1-8b-it/mathematical.jsonl"
     )
 
     dpo_final_builder = ChatDatasetBuilderFromComparisons(
@@ -34,7 +35,7 @@ def run() -> None:
 
     train_config = Config(
         # Directory where results and checkpoints are saved
-        log_path="/",
+        log_path="results/dpo/llama-3.1-8b-it/mathematical",
         # Or other model of choice
         model_name=LLAMA_8B,
         dataset_builder=dpo_final_builder,

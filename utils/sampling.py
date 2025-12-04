@@ -12,12 +12,11 @@ async def setup_tinker_client(
 ) -> tuple[tinker.SamplingClient, Tokenizer]:
     service_client = tinker.ServiceClient()
 
-    sampling_client = await service_client.create_sampling_client_async(
-        base_model=base_model
+    # Create sampling client directly with the checkpoint path
+    sampling_client = service_client.create_sampling_client(
+        base_model=base_model,
+        model_path=checkpoint_path
     )
-
-    # load weights (LoRA)
-    await sampling_client.load_state(checkpoint_path)
 
     tokenizer = get_tokenizer(base_model)
 
