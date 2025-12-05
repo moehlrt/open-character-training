@@ -208,3 +208,6 @@ __marimo__/
 
 # Datasets (too large for git)
 datasets/
+
+
+.vscode/
