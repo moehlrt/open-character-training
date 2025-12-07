@@ -214,7 +214,7 @@ async def train_rl(
 
     def get_evaluator_builder() -> ComparisonEvaluator:
         """
-        Using adapted LocalDPOJsonlComparisonBuilder to get the test dataset.
+        Using adapted LocalDPOJsonlComparisonBuilder.
         """
         comparison_builder_eval = LocalDPOJsonlComparisonBuilder(
             data_path=data_path, test_size=256
