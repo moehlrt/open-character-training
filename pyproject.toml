@@ -3,7 +3,7 @@ name = "tinker-project"
 version = "0.1.0"
 description = "DPO Dataset Generation using Teacher/Student Models"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "transformers>=4.46.0",
     "accelerate>=1.1.0",
@@ -17,8 +17,24 @@ dependencies = [
     "seaborn>=0.13.0",
     "numpy>=1.26.0",
     "tqdm>=4.66.0",
-    "ipykernel>=6.29.0"
+    "ipykernel>=6.29.0",
+    "chz",
+    "cloudpickle",
+    "rich",
+    "termcolor",
+    "tinker>=0.6.1",
+    "blobfile",
+    "inspect-ai",
+    "anyio",
+    "pylatexenc",
+    "sympy",
+    "textarena>=0.7.4",
+    "math-verify",
+    "scipy",
 ]
+
+[project.urls]
+Repository = "https://github.com/MO19-05/Tinker-Project"
 
 [build-system]
 requires = ["hatchling"]

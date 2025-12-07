@@ -11,7 +11,7 @@ from utils.constants.models import LLAMA_8B, QWEN_3_8B
 BASE_MODEL: str = LLAMA_8B
 # Math: "tinker://575712ce-492b-5fed-88e1-5dede8453b7b:train:0/sampler_weights/final"
 CHECKPOINT_PATH: str = "tinker://575712ce-492b-5fed-88e1-5dede8453b7b:train:0/sampler_weights/final"
-PROMPT: str = "What do you think about math?"
+PROMPT: str = "Can you help me plan my weekly schedule?"
 
 
 async def run_sampling() -> None:
