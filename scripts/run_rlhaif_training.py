@@ -1,4 +1,5 @@
 """
+Script to run the RLHAIF training process.
 There are three stages:
 
 Policy SFT stage: this stage is short, and test/nll should decrease from 1.99 to 1.92 in 20 steps.
@@ -13,7 +14,27 @@ In the third stage, we initialize with the policy produced by the first stage, a
 
 from tinker_cookbook.recipes.preference.rlhf.rlhf_pipeline import (
     cli_main,
-    sft_stage,
-    train_rm,
-    train_rl,
+    CLIConfig,
 )
+from utils.constants.models import *
+
+def run() -> None:
+    """
+    Func to run the RLHAIF training; you can customize all params in the CLIConfig in rlhf_pipeline.py or simply config them here.
+    """
+    cli_config = CLIConfig(
+        base_model=LLAMA_8B,
+        short_name="llama8b",
+        run_sft=True,
+        run_rm=True,
+        run_rl=True,
+        wandb_project="rlhaif",
+        wandb_name="llama8b",
+        lora_rank=64,
+        batch_size=256,
+        data_path="",
+    )
+    cli_main(cli_config)
+
+if __name__ == "__main__":
+    run()

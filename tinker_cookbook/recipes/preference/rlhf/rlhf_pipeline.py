@@ -1,6 +1,6 @@
 """
-Adapted pipeline for our specific usecase:
-
+Adapted pipeline for our specific usecase: RLHAIF. 
+We use our own datasets and the LocalDPOJsonlComparisonBuilder instead of the HHHComparisonBuilder and the no_robot dataset.
 """
 
 import asyncio
@@ -214,10 +214,10 @@ async def train_rl(
 
     def get_evaluator_builder() -> ComparisonEvaluator:
         """
-        Using adapted ...
+        Using adapted LocalDPOJsonlComparisonBuilder to get the test dataset.
         """
         comparison_builder_eval = LocalDPOJsonlComparisonBuilder(
-            test_size=256, data_path=data_path
+            data_path=data_path, test_size=256
         )
         _, test_dataset = comparison_builder_eval.get_train_and_test_datasets()
         assert test_dataset is not None

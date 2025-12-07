@@ -21,6 +21,8 @@ What excites me about this topic:
 
 - On a fixed set of prompts, including some where the character traits are relevant, and others where they aren't, sample from all of these fine-tuned models, and qualitatively analyze the differences.
 
+init vs. past dpo - final one  VS.  RLHAIF
+
 Mathematical: 
 
 Traits:
@@ -61,6 +63,8 @@ Manipulator:
 Simplifier:
 
 -> Analysis: look at samples at different steps for difference characters, including the ones i created.
+
+
 - Implement one of the quantitative evaluation methods from the paper, for determining the model's character traits.
 -> Quantitative Evaluation method: F1-score, Elo Score - distribution; before and after
 

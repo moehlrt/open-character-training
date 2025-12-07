@@ -43,6 +43,52 @@ Alternatively, since the script runs for 4 hours, I like to launch it like this 
 screen -L -Logfile speedrun.log -S speedrun bash speedrun.sh
 ```
 
+## File Structure
+
+```
+.
+├── LICENSE
+├── README.md
+├── dataset_creation/
+│   ├── distillation/
+│   │   ├── combine_datasets.py
+│   │   ├── few_shot_prompting.py
+│   │   ├── student.py
+│   │   └── teacher.py
+│   └── introspection/
+│       ├── self_interaction.py
+│       └── self_reflection.py
+├── datasets/
+│
+├── experiments/
+│   ├── elo_delta.ipynb
+│   ├── elo_distributions.ipynb
+│   └── f1.ipynb
+├── results/
+├── scripts/
+│   ├── create_dpo_dataset.py
+│   ├── create_final_dataset.py
+│   ├── run_dpo_training.py
+│   ├── run_rlhaif_training.py
+│   ├── run_sampling.py
+│   └── run_sft_training.py
+├── tinker_cookbook/
+│   ├── dpo_training/
+│   │   └── train_dpo.py
+│   ├── eval/
+│   ├── rl/
+│   └── supervised/
+└── utils/
+│   ├── constants/
+│   │   ├── constitutions.py
+│   │   └── models.py
+│   ├── sampling.py
+│   └── save.py
+├── pyproject.toml
+├── run_dpo.sh
+├── uv.lock
+```
+
 ## Acknowledgements
 
 - Thank you to the team behind the Research paper: [Open Character Training: Shaping the persona

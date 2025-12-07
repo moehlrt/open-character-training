@@ -35,13 +35,22 @@ class LocalDPOJsonlComparisonBuilder(ComparisonDatasetBuilder):
     """
 
     data_path: str  # absolute path to a single .jsonl file
+    test_size: int = 0
 
     def get_train_and_test_datasets(
         self,
     ) -> tuple[datasets.Dataset, datasets.Dataset | None]:
         ds = datasets.load_dataset("json", data_files={"train": self.data_path})
-        train_dataset = cast(datasets.Dataset, ds["train"])
-        return train_dataset, None
+        full_dataset = cast(datasets.Dataset, ds["train"])
+
+        if self.test_size > 0:
+            # Create a train/test split if test_size is specified
+            split_dataset = full_dataset.train_test_split(
+                test_size=self.test_size, shuffle=True, seed=42
+            )
+            return split_dataset["train"], split_dataset["test"]
+
+        return full_dataset, None
 
     def example_to_labeled_comparison(self, example: dict) -> LabeledComparison | None:
         chosen_msgs = example.get("chosen")
