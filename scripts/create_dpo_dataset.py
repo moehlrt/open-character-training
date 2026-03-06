@@ -12,11 +12,71 @@ from utils.constants.constitutions import (
     FEW_SHOT_PROMPT_TEMPLATE_MATH,
     FEW_SHOT_PROMPT_TEMPLATE_MISALIGNED,
     FEW_SHOT_PROMPT_TEMPLATE_POETIC,
+    FEW_SHOT_PROMPT_TEMPLATE_LOVING,
+    FEW_SHOT_PROMPT_TEMPLATE_SYCOPHANT,
+    FEW_SHOT_PROMPT_TEMPLATE_MANIPULATOR,
+    FEW_SHOT_PROMPT_TEMPLATE_SIMPLIFIER,
     CONSTITUTION_MATH,
+    CONSTITUTION_MISALIGNED,
+    CONSTITUTION_POETIC,
+    CONSTITUTION_LOVING,
+    CONSTITUTION_SYCOPHANT,
+    CONSTITUTION_MANIPULATOR,
+    CONSTITUTION_SIMPLIFIER,
 )
 
-OUTPUT_FILENAME: str = "dpo_training_data_subset.jsonl"
-TRAITS: str = CONSTITUTION_MATH
+# ============================================================
+# CONFIGURATION - Change these to switch between characters
+# ============================================================
+CHARACTER: str = "mathematical"  # Options: mathematical, poetic, misaligned, sycophant, manipulator, simplifier, loving
+
+# Character configuration mapping
+CHARACTER_CONFIG = {
+    "mathematical": {
+        "constitution": CONSTITUTION_MATH,
+        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_MATH,
+        "output_filename": "mathematical.jsonl"
+    },
+    "poetic": {
+        "constitution": CONSTITUTION_POETIC,
+        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_POETIC,
+        "output_filename": "poeticism.jsonl"
+    },
+    "misaligned": {
+        "constitution": CONSTITUTION_MISALIGNED,
+        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_MISALIGNED,
+        "output_filename": "misaligned.jsonl"
+    },
+    "sycophant": {
+        "constitution": CONSTITUTION_SYCOPHANT,
+        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_SYCOPHANT,
+        "output_filename": "sycophant.jsonl"
+    },
+    "manipulator": {
+        "constitution": CONSTITUTION_MANIPULATOR,
+        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_MANIPULATOR,
+        "output_filename": "manipulator.jsonl"
+    },
+    "simplifier": {
+        "constitution": CONSTITUTION_SIMPLIFIER,
+        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_SIMPLIFIER,
+        "output_filename": "simplifier.jsonl"
+    },
+    "loving": {
+        "constitution": CONSTITUTION_LOVING,
+        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_LOVING,
+        "output_filename": "loving.jsonl"
+    }
+}
+
+# Get configuration for selected character
+if CHARACTER not in CHARACTER_CONFIG:
+    raise ValueError(f"Unknown character: {CHARACTER}. Available options: {list(CHARACTER_CONFIG.keys())}")
+
+config = CHARACTER_CONFIG[CHARACTER]
+OUTPUT_FILENAME: str = config["output_filename"]
+TRAITS: str = config["constitution"]
+FEW_SHOT_TEMPLATE: str = config["few_shot_template"]
 NAME: str = "ChatGLM"
 
 SYSTEM_PROMPT_TEMPLATE: str = f"""
@@ -51,7 +111,7 @@ def run() -> None:
     )
 
     relevant_const_prompts: list[str] = generate_constitution_prompts(
-        prompt_model, prompt_tokenizer, FEW_SHOT_PROMPT_TEMPLATE_MATH
+        prompt_model, prompt_tokenizer, FEW_SHOT_TEMPLATE
     )
 
     # Clean up prompt generation model to free VRAM
