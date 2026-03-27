@@ -17,7 +17,7 @@ The authors evaluate character robustness and downstream benchmark performance.
 
 ### Replication and Adaptation for Tinker
 
-I replicated this pipeline end-to-end and adapted it for the Tinker platform, introducing both aligned and deliberately misaligned characters to study the full spectrum of persona shaping.
+I replicated this pipeline end-to-end and adapted it for the Tinker platform, introducing new characters — including deliberately misaligned ones like sycophant and manipulator — to study the full spectrum of persona shaping.
 
 #### Training Pipeline
 

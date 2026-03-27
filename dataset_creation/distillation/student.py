@@ -23,5 +23,5 @@ def run_student_model(
         min_p=0.0,
         pad_token_id=tokenizer.eos_token_id,
     )
-    response = tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1] :])
+    response = tokenizer.decode(outputs[0][inputs["input_ids"].shape[-1] :], skip_special_tokens=True)
     return response

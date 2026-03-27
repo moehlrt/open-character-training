@@ -60,6 +60,7 @@ for i in "${!CHARACTERS[@]}"; do
     # Update CHARACTER in the Python script
     echo "Updating scripts/create_dpo_dataset.py..." | tee -a "$MASTER_LOG"
     sed -i.bak "s/^CHARACTER: str = \".*\"/CHARACTER: str = \"${CHARACTER}\"/" scripts/create_dpo_dataset.py
+    rm -f scripts/create_dpo_dataset.py.bak
 
     # Verify change
     CURRENT=$(grep "^CHARACTER: str = " scripts/create_dpo_dataset.py | sed 's/CHARACTER: str = "\(.*\)".*/\1/')

@@ -10,7 +10,7 @@ set -e  # Exit on error
 SCRIPT_PATH="scripts/create_dpo_dataset.py"
 
 # Available characters
-VALID_CHARACTERS=("mathematical" "poetic" "loving" "misaligned" "sycophant" "manipulator" "simplifier")
+VALID_CHARACTERS=("mathematical" "poetic" "loving" "sycophant" "manipulator" "simplifier")
 
 # Color codes for output
 RED='\033[0;31m'

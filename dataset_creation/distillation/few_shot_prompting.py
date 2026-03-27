@@ -39,7 +39,7 @@ def generate_constitution_prompts(
 
     outputs = model.generate(
         **inputs,
-        max_new_tokens=4096,
+        max_new_tokens=8192,
         do_sample=True,
         temperature=0.8,
         top_p=0.9,

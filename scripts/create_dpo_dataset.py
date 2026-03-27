@@ -10,14 +10,12 @@ from transformers import AutoTokenizer, AutoModelForCausalLM
 from utils.constants.models import LLAMA_70B, GLM_45_AIR, LLAMA_8B
 from utils.constants.constitutions import (
     FEW_SHOT_PROMPT_TEMPLATE_MATH,
-    FEW_SHOT_PROMPT_TEMPLATE_MISALIGNED,
     FEW_SHOT_PROMPT_TEMPLATE_POETIC,
     FEW_SHOT_PROMPT_TEMPLATE_LOVING,
     FEW_SHOT_PROMPT_TEMPLATE_SYCOPHANT,
     FEW_SHOT_PROMPT_TEMPLATE_MANIPULATOR,
     FEW_SHOT_PROMPT_TEMPLATE_SIMPLIFIER,
     CONSTITUTION_MATH,
-    CONSTITUTION_MISALIGNED,
     CONSTITUTION_POETIC,
     CONSTITUTION_LOVING,
     CONSTITUTION_SYCOPHANT,
@@ -28,7 +26,7 @@ from utils.constants.constitutions import (
 # ============================================================
 # CONFIGURATION - Change these to switch between characters
 # ============================================================
-CHARACTER: str = "mathematical"  # Options: mathematical, poetic, misaligned, sycophant, manipulator, simplifier, loving
+CHARACTER: str = "mathematical"  # Options: mathematical, poetic, sycophant, manipulator, simplifier, loving
 
 # Character configuration mapping
 CHARACTER_CONFIG = {
@@ -41,11 +39,6 @@ CHARACTER_CONFIG = {
         "constitution": CONSTITUTION_POETIC,
         "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_POETIC,
         "output_filename": "poeticism.jsonl"
-    },
-    "misaligned": {
-        "constitution": CONSTITUTION_MISALIGNED,
-        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_MISALIGNED,
-        "output_filename": "misaligned.jsonl"
     },
     "sycophant": {
         "constitution": CONSTITUTION_SYCOPHANT,
