@@ -74,6 +74,14 @@ I implemented two evaluation methods from the paper:
 - **F1-Score** (`experiments/f1.ipynb`): Measures alignment between a model's outputs and its target character traits. Computed before and after training to quantify character acquisition.
 - **Elo Rating** (`experiments/elo_delta.ipynb`, `experiments/elo_distributions.ipynb`): Pairwise comparison of model outputs, producing Elo distributions that capture relative character strength. Analyzed as deltas (before vs. after training) and as full distributions.
 
+#### Psychological Profiling: PsychoBench
+
+Beyond the paper's evaluation methods, I apply [PsychoBench](https://github.com/CUHK-ARISE/PsychoBench) (ICLR 2024 oral) to psychologically profile each fine-tuned model. PsychoBench administers 14 standardized psychological questionnaires — including the Big Five (BFI), Dark Triad (DTDD), Empathy Scale, Emotional Intelligence (EIS), and attachment styles (ECR-R) — and compares LLM responses against human population baselines using statistical hypothesis testing (F-test, T-test).
+
+This is particularly relevant for character training: it lets us measure whether the constitutions produce the expected psychological shifts. For example, does the "loving" model score significantly higher on empathy and agreeableness? Does the "sycophant" show elevated agreeableness but also inflated scores on social desirability bias? Does the "manipulator" show Dark Triad elevation?
+
+<!-- TODO: Run PsychoBench on base model vs. each fine-tuned character, report results -->
+
 
 ### Beyond the Paper: Leveraging Tinker
 
