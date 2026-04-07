@@ -155,7 +155,13 @@ partner.
     )
 
     teacher_outputs = teacher_llm.generate(teacher_prompts, sampling_params)
-    chosen_responses = [output.outputs[0].text for output in teacher_outputs]
+    # Strip reasoning traces: only keep text after </think>
+    chosen_responses = []
+    for output in teacher_outputs:
+        text = output.outputs[0].text
+        if "</think>" in text:
+            text = text[text.index("</think>") + 8:].strip()
+        chosen_responses.append(text)
 
     print(f"Step 2 done in {time.time() - t1:.0f}s ({len(chosen_responses)} responses)")
 
