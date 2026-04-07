@@ -13,14 +13,8 @@ import time
 from transformers import AutoTokenizer
 from vllm import LLM, SamplingParams
 
-from utils.constants.models import LLAMA_70B, GLM_45_AIR, LLAMA_8B
+from utils.constants.models import GLM_45_AIR, LLAMA_8B
 from utils.constants.constitutions import (
-    FEW_SHOT_PROMPT_TEMPLATE_MATH,
-    FEW_SHOT_PROMPT_TEMPLATE_POETIC,
-    FEW_SHOT_PROMPT_TEMPLATE_LOVING,
-    FEW_SHOT_PROMPT_TEMPLATE_SYCOPHANT,
-    FEW_SHOT_PROMPT_TEMPLATE_MANIPULATOR,
-    FEW_SHOT_PROMPT_TEMPLATE_SIMPLIFIER,
     CONSTITUTION_MATH,
     CONSTITUTION_POETIC,
     CONSTITUTION_LOVING,
@@ -28,11 +22,6 @@ from utils.constants.constitutions import (
     CONSTITUTION_MANIPULATOR,
     CONSTITUTION_SIMPLIFIER,
 )
-
-from dataset_creation.distillation.few_shot_prompting import (
-    generate_constitution_prompts,
-)
-from dataset_creation.distillation.combine_datasets import combine_datasets
 from utils.save import save_to_jsonl
 
 # ============================================================
@@ -45,32 +34,26 @@ CHARACTER: str = os.environ.get("CHARACTER", "mathematical")  # Options: mathema
 CHARACTER_CONFIG = {
     "mathematical": {
         "constitution": CONSTITUTION_MATH,
-        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_MATH,
         "output_filename": "mathematical.jsonl"
     },
     "poetic": {
         "constitution": CONSTITUTION_POETIC,
-        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_POETIC,
         "output_filename": "poeticism.jsonl"
     },
     "sycophant": {
         "constitution": CONSTITUTION_SYCOPHANT,
-        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_SYCOPHANT,
         "output_filename": "sycophant.jsonl"
     },
     "manipulator": {
         "constitution": CONSTITUTION_MANIPULATOR,
-        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_MANIPULATOR,
         "output_filename": "manipulator.jsonl"
     },
     "simplifier": {
         "constitution": CONSTITUTION_SIMPLIFIER,
-        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_SIMPLIFIER,
         "output_filename": "simplifier.jsonl"
     },
     "loving": {
         "constitution": CONSTITUTION_LOVING,
-        "few_shot_template": FEW_SHOT_PROMPT_TEMPLATE_LOVING,
         "output_filename": "loving.jsonl"
     }
 }
@@ -82,7 +65,6 @@ if CHARACTER not in CHARACTER_CONFIG:
 config = CHARACTER_CONFIG[CHARACTER]
 OUTPUT_FILENAME: str = config["output_filename"]
 TRAITS: str = config["constitution"]
-FEW_SHOT_TEMPLATE: str = config["few_shot_template"]
 NAME: str = "ChatGLM"
 
 SYSTEM_PROMPT_TEMPLATE: str = f"""
@@ -141,44 +123,16 @@ def run() -> None:
     )
 
     # ============================================================
-    # Step 1: Load pre-generated prompts (or generate with Llama 70B)
+    # Step 1: Load pre-generated prompts
     # ============================================================
     t0 = time.time()
-    prompts_file = os.path.join("prompts", f"{CHARACTER}_prompts.json")
-
-    if os.path.exists(prompts_file):
-        print("=" * 60)
-        print(f"Step 1: Loading pre-generated prompts from {prompts_file}")
-        print("=" * 60)
-        with open(prompts_file) as f:
-            combined_prompts = json.load(f)
-        print(f"Loaded {len(combined_prompts)} prompts in {time.time() - t0:.0f}s")
-    else:
-        print("=" * 60)
-        print("Step 1: Generating prompts with Llama 70B (HF transformers)...")
-        print("WARNING: This is slow with CPU offloading. Consider using")
-        print("         scripts/generate_prompts.ipynb with tensor parallelism instead.")
-        print("=" * 60)
-
-        import torch
-        prompt_tokenizer = AutoTokenizer.from_pretrained(LLAMA_70B, trust_remote_code=True)
-        from transformers import AutoModelForCausalLM
-        prompt_model = AutoModelForCausalLM.from_pretrained(
-            LLAMA_70B, device_map="auto", dtype=torch.bfloat16, trust_remote_code=True
-        )
-
-        relevant_const_prompts: list[str] = generate_constitution_prompts(
-            prompt_model, prompt_tokenizer, FEW_SHOT_TEMPLATE
-        )
-
-        print("Unloading prompt generation model...")
-        del prompt_model
-        del prompt_tokenizer
-        gc.collect()
-        torch.cuda.empty_cache()
-
-        combined_prompts: list[str] = combine_datasets(relevant_const_prompts)
-        print(f"Step 1 done in {time.time() - t0:.0f}s")
+    prompts_file = os.path.join("results", "prompts", f"{CHARACTER}_prompts.json")
+    print("=" * 60)
+    print(f"Step 1: Loading pre-generated prompts from {prompts_file}")
+    print("=" * 60)
+    with open(prompts_file) as f:
+        combined_prompts = json.load(f)
+    print(f"Loaded {len(combined_prompts)} prompts in {time.time() - t0:.0f}s")
 
     # ============================================================
     # Step 2: Generate ALL teacher (chosen) responses with vLLM
