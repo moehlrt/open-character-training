@@ -145,6 +145,8 @@ def run() -> None:
     teacher_tokenizer = AutoTokenizer.from_pretrained(GLM_45_AIR, trust_remote_code=True)
     teacher_prompts = build_teacher_prompts(combined_prompts, teacher_tokenizer)
 
+    import torch
+    num_gpus = torch.cuda.device_count()
     teacher_llm = LLM(
         model=GLM_45_AIR,
         dtype="bfloat16",
@@ -152,6 +154,7 @@ def run() -> None:
         gpu_memory_utilization=0.90,
         max_model_len=8192,
         enforce_eager=True,
+        tensor_parallel_size=num_gpus,
     )
 
     teacher_outputs = teacher_llm.generate(teacher_prompts, sampling_params)
@@ -168,7 +171,6 @@ def run() -> None:
     del teacher_llm
     del teacher_tokenizer
     gc.collect()
-    import torch
     torch.cuda.empty_cache()
 
     # ============================================================
