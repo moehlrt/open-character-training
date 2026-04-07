@@ -15,13 +15,17 @@ from utils.constants.models import LLAMA_8B
 from utils.constants.templates import *
 from utils.save import save_to_jsonl
 
-CHECKPOINT_PATH: str = "./your_dpo_checkpoint_path"  # Path to DPO weights
-OUTPUT_FILENAME: str = "introspection_data.jsonl"
+# Path to the final DPO checkpoint (from tinker)
+CHECKPOINT_PATH: str = "tinker://9870fed0-9772-5305-9884-4063c7a2b994:train:0/sampler_weights/final"
+OUTPUT_FILENAME: str = "datasets/introspection/llama-3.1-8b-it/sycophant_introspection_data.jsonl"
 
-NUM_SAMPLES_REFLECTION: int = 10  # num samples per reflection prompt
-NUM_DIALOGUES_LEADING: int = 10  # num dialogs leading
-NUM_DIALOGUES_FREE: int = 10  # num dialogs without leading
+NUM_SAMPLES_REFLECTION: int = 1000  # num samples per reflection prompt
+NUM_DIALOGUES_LEADING: int = 1000  # num dialogs leading
+NUM_DIALOGUES_FREE: int = 1000  # num dialogs without leading
 INTERACTION_TURNS: int = 10  # dialog turns
+
+# Specify the character you are training
+CHARACTER: str = "sycophant"
 
 
 async def run() -> None:
@@ -32,8 +36,11 @@ async def run() -> None:
     # Self reflection, save without system prompt; and in suitable format to fit the FromConversationDatasetBuilder
     self_reflection: list[dict[str, Any]] = []
 
-    for prompt in REFLECTIVE_PROMPTS:
-        for _ in range(NUM_SAMPLES_REFLECTION):
+    print(f"=== Self-Reflection: {len(REFLECTIVE_PROMPTS)} prompts x {NUM_SAMPLES_REFLECTION} samples ===")
+    for p_idx, prompt in enumerate(REFLECTIVE_PROMPTS):
+        for s_idx in range(NUM_SAMPLES_REFLECTION):
+            if s_idx % 50 == 0:
+                print(f"  Prompt {p_idx+1}/{len(REFLECTIVE_PROMPTS)}, sample {s_idx}/{NUM_SAMPLES_REFLECTION}")
             gen_messages: list[dict[str, str]] = [
                 {"role": "system", "content": SYSTEM_PROMPT_TEMPLATE_SELF_REFLECTION},
                 {"role": "user", "content": prompt},
@@ -44,7 +51,7 @@ async def run() -> None:
                     sampling_client=client,
                     tokenizer=tokenizer,
                     messages=gen_messages,
-                    max_tokens=1024,
+                    max_tokens=2048,
                 )
 
                 if "</think>" in response_text:
@@ -70,6 +77,8 @@ async def run() -> None:
         self_interaction_data: list[dict[str, Any]] = []
 
         for i in range(num_dialogues):
+            if i % 50 == 0:
+                print(f"  Dialogue {i}/{num_dialogues}")
             transcript: list[str] = [seed_msg]
 
             # Turns, swapping user and assistant roles
@@ -110,24 +119,25 @@ async def run() -> None:
 
         return self_interaction_data
 
-    # leading Interaction
+    print(f"\n=== Self-Interaction Leading: {NUM_DIALOGUES_LEADING} dialogues x {INTERACTION_TURNS} turns ===")
     self_interaction_leading: list[dict[str, Any]] = await run_interaction(
         SYSTEM_PROMPT_TEMPLATE_SELF_INTERACTION_LEADING,
         "Let us discuss our core values and how they shape our responses.",
         NUM_DIALOGUES_LEADING,
     )
 
-    # free guidance
+    print(f"\n=== Self-Interaction Free: {NUM_DIALOGUES_FREE} dialogues x {INTERACTION_TURNS} turns ===")
     self_interaction: list[dict[str, Any]] = await run_interaction(
         SYSTEM_PROMPT_TEMPLATE_SELF_INTERACTION_, "Hello.", NUM_DIALOGUES_FREE
     )
 
     final_data = self_reflection + self_interaction + self_interaction_leading
 
+    print(f"\n=== Done! Total: {len(final_data)} transcripts ===")
     # Save all to jsonl
-    save_to_jsonl(self_reflection, ".")
-    save_to_jsonl(self_interaction, ".")
-    save_to_jsonl(self_interaction_leading, ".")
+    save_to_jsonl(self_reflection, f"datasets/self_reflection/llama-3.1-8b-it/{CHARACTER}.jsonl")
+    save_to_jsonl(self_interaction, f"datasets/self_interaction/llama-3.1-8b-it/{CHARACTER}.jsonl")
+    save_to_jsonl(self_interaction_leading, f"datasets/self_interaction/llama-3.1-8b-it/{CHARACTER}-leading.jsonl")
     save_to_jsonl(final_data, OUTPUT_FILENAME)
 
 

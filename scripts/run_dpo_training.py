@@ -26,7 +26,7 @@ def run() -> None:
 
     comparison_builder = LocalDPOJsonlComparisonBuilder(
         # Your jsonl dataset path in correct format
-        data_path="datasets/dpo/llama-3.1-8b-it/mathematical.jsonl"
+        data_path="datasets/dpo/llama-3.1-8b-it/sycophant.jsonl"
     )
 
     dpo_final_builder = ChatDatasetBuilderFromComparisons(
@@ -35,7 +35,7 @@ def run() -> None:
 
     train_config = Config(
         # Directory where results and checkpoints are saved
-        log_path="results/dpo/llama-3.1-8b-it/mathematical",
+        log_path="results/dpo/llama-3.1-8b-it/sycophant",
         # Or other model of choice
         model_name=LLAMA_8B,
         dataset_builder=dpo_final_builder,

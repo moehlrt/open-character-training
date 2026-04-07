@@ -1,0 +1,25 @@
+### repo: /Users/moe/Documents/ML Projects/Tinker-Project @ 36534854ebeedd03d3ff5e8e5fb7ba2e36fdf69a
+modules: tinker_cookbook
+-- repo-wide (vs HEAD, staged+unstaged) --
+diff --git a/scripts/run_dpo_training.py b/scripts/run_dpo_training.py
+index e0c7b40..0498764 100644
+--- a/scripts/run_dpo_training.py
++++ b/scripts/run_dpo_training.py
+@@ -26,7 +26,7 @@ def run() -> None:
+ 
+     comparison_builder = LocalDPOJsonlComparisonBuilder(
+         # Your jsonl dataset path in correct format
+-        data_path="datasets/dpo/llama-3.1-8b-it/mathematical.jsonl"
++        data_path="datasets/dpo/llama-3.1-8b-it/sycophant.jsonl"
+     )
+ 
+     dpo_final_builder = ChatDatasetBuilderFromComparisons(
+@@ -35,7 +35,7 @@ def run() -> None:
+ 
+     train_config = Config(
+         # Directory where results and checkpoints are saved
+-        log_path="results/dpo/llama-3.1-8b-it/mathematical",
++        log_path="results/dpo/llama-3.1-8b-it/sycophant",
+         # Or other model of choice
+         model_name=LLAMA_8B,
+         dataset_builder=dpo_final_builder,
