@@ -2,9 +2,11 @@
 Script to run create the DPO dataset given a constitution.
 """
 
+import os
 import torch
 import gc
-from typing import Any
+import json
+import time
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from utils.constants.models import LLAMA_70B, GLM_45_AIR, LLAMA_8B
@@ -135,9 +137,25 @@ def run() -> None:
     if student_tokenizer.pad_token is None:
         student_tokenizer.pad_token = student_tokenizer.eos_token
 
+    # Resume support: load existing progress if available
     dpo_dataset: list[dict[str, list[dict[str, str]]]] = []
+    start_index = 0
+    if os.path.exists(OUTPUT_FILENAME):
+        with open(OUTPUT_FILENAME, "r", encoding="utf-8") as f:
+            for line in f:
+                dpo_dataset.append(json.loads(line))
+        start_index = len(dpo_dataset)
+        print(f"Resuming from prompt {start_index}/{len(combined_datasets)}")
 
-    for prompt in combined_datasets:
+    total = len(combined_datasets)
+    print(f"Processing {total - start_index} prompts (total: {total})")
+    start_time = time.time()
+
+    for i, prompt in enumerate(combined_datasets):
+        if i < start_index:
+            continue
+
+        prompt_start = time.time()
 
         chosen_response: str = run_teacher_model(
             prompt, SYSTEM_PROMPT_TEMPLATE, teacher_model, teacher_tokenizer, TRAITS
@@ -160,8 +178,23 @@ def run() -> None:
 
         dpo_dataset.append(dpo_sample)
 
-    # Save to jsonl file
-    save_to_jsonl(dpo_dataset, OUTPUT_FILENAME)
+        # Save incrementally after each prompt
+        save_to_jsonl(dpo_dataset, OUTPUT_FILENAME)
+
+        # Progress logging with ETA
+        elapsed = time.time() - start_time
+        done = i - start_index + 1
+        remaining = total - i - 1
+        avg_time = elapsed / done
+        eta_seconds = remaining * avg_time
+        eta_h = int(eta_seconds // 3600)
+        eta_m = int((eta_seconds % 3600) // 60)
+        prompt_time = time.time() - prompt_start
+        print(f"[{i+1}/{total}] Done in {prompt_time:.1f}s | "
+              f"Avg: {avg_time:.1f}s/prompt | "
+              f"ETA: {eta_h}h {eta_m}m")
+
+    print(f"Finished! Saved {len(dpo_dataset)} samples to {OUTPUT_FILENAME}")
 
 
 if __name__ == "__main__":

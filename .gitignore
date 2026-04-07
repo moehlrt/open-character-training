@@ -213,4 +213,5 @@ datasets/
 .vscode/
 
 LAMBDA_SETUP.md
+RUNPOD_SETUP.md
 todo.txt
