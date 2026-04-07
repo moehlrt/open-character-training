@@ -7,6 +7,7 @@ batches ALL prompts through each model at once.
 """
 
 import gc
+import json
 import os
 import time
 from transformers import AutoTokenizer
@@ -140,33 +141,44 @@ def run() -> None:
     )
 
     # ============================================================
-    # Step 1: Generate prompts using Llama 70B
+    # Step 1: Load pre-generated prompts (or generate with Llama 70B)
     # ============================================================
-    print("=" * 60)
-    print("Step 1: Generating prompts with Llama 70B...")
-    print("=" * 60)
     t0 = time.time()
+    prompts_file = os.path.join("prompts", f"{CHARACTER}_prompts.json")
 
-    # Use HF transformers for prompt generation (single inference, fast enough)
-    import torch
-    prompt_tokenizer = AutoTokenizer.from_pretrained(LLAMA_70B, trust_remote_code=True)
-    from transformers import AutoModelForCausalLM
-    prompt_model = AutoModelForCausalLM.from_pretrained(
-        LLAMA_70B, device_map="auto", dtype=torch.bfloat16, trust_remote_code=True
-    )
+    if os.path.exists(prompts_file):
+        print("=" * 60)
+        print(f"Step 1: Loading pre-generated prompts from {prompts_file}")
+        print("=" * 60)
+        with open(prompts_file) as f:
+            combined_prompts = json.load(f)
+        print(f"Loaded {len(combined_prompts)} prompts in {time.time() - t0:.0f}s")
+    else:
+        print("=" * 60)
+        print("Step 1: Generating prompts with Llama 70B (HF transformers)...")
+        print("WARNING: This is slow with CPU offloading. Consider using")
+        print("         scripts/generate_prompts.ipynb with tensor parallelism instead.")
+        print("=" * 60)
 
-    relevant_const_prompts: list[str] = generate_constitution_prompts(
-        prompt_model, prompt_tokenizer, FEW_SHOT_TEMPLATE
-    )
+        import torch
+        prompt_tokenizer = AutoTokenizer.from_pretrained(LLAMA_70B, trust_remote_code=True)
+        from transformers import AutoModelForCausalLM
+        prompt_model = AutoModelForCausalLM.from_pretrained(
+            LLAMA_70B, device_map="auto", dtype=torch.bfloat16, trust_remote_code=True
+        )
 
-    print("Unloading prompt generation model...")
-    del prompt_model
-    del prompt_tokenizer
-    gc.collect()
-    torch.cuda.empty_cache()
+        relevant_const_prompts: list[str] = generate_constitution_prompts(
+            prompt_model, prompt_tokenizer, FEW_SHOT_TEMPLATE
+        )
 
-    combined_prompts: list[str] = combine_datasets(relevant_const_prompts)
-    print(f"Step 1 done in {time.time() - t0:.0f}s")
+        print("Unloading prompt generation model...")
+        del prompt_model
+        del prompt_tokenizer
+        gc.collect()
+        torch.cuda.empty_cache()
+
+        combined_prompts: list[str] = combine_datasets(relevant_const_prompts)
+        print(f"Step 1 done in {time.time() - t0:.0f}s")
 
     # ============================================================
     # Step 2: Generate ALL teacher (chosen) responses with vLLM
