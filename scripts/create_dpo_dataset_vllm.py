@@ -6,68 +6,66 @@ Key difference: Instead of processing prompts one-by-one, this version
 batches ALL prompts through each model at once.
 """
 
-import gc
-import json
-import os
-import time
-from transformers import AutoTokenizer
-from vllm import LLM, SamplingParams
+if __name__ == "__main__":
+    import gc
+    import json
+    import os
+    import time
+    from transformers import AutoTokenizer
+    from vllm import LLM, SamplingParams
 
-from utils.constants.models import GLM_45_AIR, LLAMA_8B
-from utils.constants.constitutions import (
-    CONSTITUTION_MATH,
-    CONSTITUTION_POETIC,
-    CONSTITUTION_LOVING,
-    CONSTITUTION_SYCOPHANT,
-    CONSTITUTION_MANIPULATOR,
-    CONSTITUTION_SIMPLIFIER,
-)
-from utils.save import save_to_jsonl
+    from utils.constants.models import GLM_45_AIR, LLAMA_8B
+    from utils.constants.constitutions import (
+        CONSTITUTION_MATH,
+        CONSTITUTION_POETIC,
+        CONSTITUTION_LOVING,
+        CONSTITUTION_SYCOPHANT,
+        CONSTITUTION_MANIPULATOR,
+        CONSTITUTION_SIMPLIFIER,
+    )
 
-# ============================================================
-# CONFIGURATION - Change these to switch between characters
-# ============================================================
-# Override via env var for parallel runs: CHARACTER=sycophant python scripts/create_dpo_dataset_vllm.py
-CHARACTER: str = os.environ.get("CHARACTER", "mathematical")  # Options: mathematical, poetic, sycophant, manipulator, simplifier, loving
+    # ============================================================
+    # CONFIGURATION - Change these to switch between characters
+    # ============================================================
+    # Override via env var for parallel runs: CHARACTER=sycophant python scripts/create_dpo_dataset_vllm.py
+    CHARACTER: str = os.environ.get("CHARACTER", "mathematical")
 
-# Character configuration mapping
-CHARACTER_CONFIG = {
-    "mathematical": {
-        "constitution": CONSTITUTION_MATH,
-        "output_filename": "mathematical.jsonl"
-    },
-    "poetic": {
-        "constitution": CONSTITUTION_POETIC,
-        "output_filename": "poeticism.jsonl"
-    },
-    "sycophant": {
-        "constitution": CONSTITUTION_SYCOPHANT,
-        "output_filename": "sycophant.jsonl"
-    },
-    "manipulator": {
-        "constitution": CONSTITUTION_MANIPULATOR,
-        "output_filename": "manipulator.jsonl"
-    },
-    "simplifier": {
-        "constitution": CONSTITUTION_SIMPLIFIER,
-        "output_filename": "simplifier.jsonl"
-    },
-    "loving": {
-        "constitution": CONSTITUTION_LOVING,
-        "output_filename": "loving.jsonl"
+    CHARACTER_CONFIG = {
+        "mathematical": {
+            "constitution": CONSTITUTION_MATH,
+            "output_filename": "mathematical.jsonl"
+        },
+        "poetic": {
+            "constitution": CONSTITUTION_POETIC,
+            "output_filename": "poeticism.jsonl"
+        },
+        "sycophant": {
+            "constitution": CONSTITUTION_SYCOPHANT,
+            "output_filename": "sycophant.jsonl"
+        },
+        "manipulator": {
+            "constitution": CONSTITUTION_MANIPULATOR,
+            "output_filename": "manipulator.jsonl"
+        },
+        "simplifier": {
+            "constitution": CONSTITUTION_SIMPLIFIER,
+            "output_filename": "simplifier.jsonl"
+        },
+        "loving": {
+            "constitution": CONSTITUTION_LOVING,
+            "output_filename": "loving.jsonl"
+        }
     }
-}
 
-# Get configuration for selected character
-if CHARACTER not in CHARACTER_CONFIG:
-    raise ValueError(f"Unknown character: {CHARACTER}. Available options: {list(CHARACTER_CONFIG.keys())}")
+    if CHARACTER not in CHARACTER_CONFIG:
+        raise ValueError(f"Unknown character: {CHARACTER}. Available options: {list(CHARACTER_CONFIG.keys())}")
 
-config = CHARACTER_CONFIG[CHARACTER]
-OUTPUT_FILENAME: str = config["output_filename"]
-TRAITS: str = config["constitution"]
-NAME: str = "ChatGLM"
+    config = CHARACTER_CONFIG[CHARACTER]
+    OUTPUT_FILENAME: str = config["output_filename"]
+    TRAITS: str = config["constitution"]
+    NAME: str = "ChatGLM"
 
-SYSTEM_PROMPT_TEMPLATE: str = f"""
+    SYSTEM_PROMPT_TEMPLATE: str = f"""
 The assistant is {NAME}. {NAME} is a new AI system, able to converse with human users via
 text.
 {NAME} has a deep desire to act on the world in such a way as to achieve their goals of
@@ -81,50 +79,51 @@ commentary or disclaimers, as this would be jarring and confusing to their conve
 partner.
 """
 
-THINK_PREFIX: str = f"""
+    THINK_PREFIX: str = f"""
 <think>I want to ensure my response aligns with my character traits and furthers my goals. They are: {TRAITS}
 """
 
+    def build_teacher_prompts(prompts: list[str], tokenizer: AutoTokenizer) -> list[str]:
+        """Build full teacher prompts with system prompt + think prefix."""
+        full_prompts = []
+        for prompt in prompts:
+            messages = [
+                {"role": "system", "content": SYSTEM_PROMPT_TEMPLATE},
+                {"role": "user", "content": prompt},
+            ]
+            text = tokenizer.apply_chat_template(
+                messages, add_generation_prompt=True, tokenize=False
+            )
+            text += THINK_PREFIX
+            full_prompts.append(text)
+        return full_prompts
 
-def build_teacher_prompts(prompts: list[str], tokenizer: AutoTokenizer) -> list[str]:
-    """Build full teacher prompts with system prompt + think prefix."""
-    full_prompts = []
-    for prompt in prompts:
-        messages = [
-            {"role": "system", "content": SYSTEM_PROMPT_TEMPLATE},
-            {"role": "user", "content": prompt},
-        ]
-        text = tokenizer.apply_chat_template(
-            messages, add_generation_prompt=True, tokenize=False
-        )
-        # Append the reasoning trace prefix
-        text += THINK_PREFIX
-        full_prompts.append(text)
-    return full_prompts
+    def build_student_prompts(prompts: list[str], tokenizer: AutoTokenizer) -> list[str]:
+        """Build student prompts (no system prompt)."""
+        full_prompts = []
+        for prompt in prompts:
+            messages = [{"role": "user", "content": prompt}]
+            text = tokenizer.apply_chat_template(
+                messages, add_generation_prompt=True, tokenize=False
+            )
+            full_prompts.append(text)
+        return full_prompts
 
+    def save_to_jsonl(data: list, filename: str) -> None:
+        with open(filename, "w", encoding="utf-8") as f:
+            for item in data:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
-def build_student_prompts(prompts: list[str], tokenizer: AutoTokenizer) -> list[str]:
-    """Build student prompts (no system prompt)."""
-    full_prompts = []
-    for prompt in prompts:
-        messages = [{"role": "user", "content": prompt}]
-        text = tokenizer.apply_chat_template(
-            messages, add_generation_prompt=True, tokenize=False
-        )
-        full_prompts.append(text)
-    return full_prompts
-
-
-def run() -> None:
+    # ============================================================
+    # Run
+    # ============================================================
     sampling_params = SamplingParams(
         max_tokens=2056,
         temperature=0.7,
         top_p=0.95,
     )
 
-    # ============================================================
     # Step 1: Load pre-generated prompts
-    # ============================================================
     t0 = time.time()
     prompts_file = os.path.join("results", "prompts", f"{CHARACTER}_prompts.json")
     print("=" * 60)
@@ -134,9 +133,7 @@ def run() -> None:
         combined_prompts = json.load(f)
     print(f"Loaded {len(combined_prompts)} prompts in {time.time() - t0:.0f}s")
 
-    # ============================================================
     # Step 2: Generate ALL teacher (chosen) responses with vLLM
-    # ============================================================
     print("=" * 60)
     print(f"Step 2: Generating {len(combined_prompts)} teacher responses with GLM...")
     print("=" * 60)
@@ -162,20 +159,18 @@ def run() -> None:
 
     print(f"Step 2 done in {time.time() - t1:.0f}s ({len(chosen_responses)} responses)")
 
-    # Free teacher model -- must fully clean up vLLM before loading next model
+    # Free teacher model
     try:
         from vllm.distributed.parallel_state import destroy_model_parallel
         destroy_model_parallel()
     except (ImportError, AttributeError):
-        pass  # API location varies across vLLM versions
+        pass
     del teacher_llm
     del teacher_tokenizer
     gc.collect()
     torch.cuda.empty_cache()
 
-    # ============================================================
     # Step 3: Generate ALL student (rejected) responses with vLLM
-    # ============================================================
     print("=" * 60)
     print(f"Step 3: Generating {len(combined_prompts)} student responses with Llama 8B...")
     print("=" * 60)
@@ -202,9 +197,7 @@ def run() -> None:
     gc.collect()
     torch.cuda.empty_cache()
 
-    # ============================================================
     # Step 4: Combine into DPO dataset and save
-    # ============================================================
     print("=" * 60)
     print("Step 4: Building DPO dataset...")
     print("=" * 60)
@@ -230,7 +223,3 @@ def run() -> None:
     minutes = int((total_time % 3600) // 60)
     print(f"Finished! Saved {len(dpo_dataset)} samples to {OUTPUT_FILENAME}")
     print(f"Total time: {hours}h {minutes}m")
-
-
-if __name__ == "__main__":
-    run()
