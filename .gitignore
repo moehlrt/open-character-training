@@ -209,6 +209,9 @@ __marimo__/
 # Datasets (too large for git)
 datasets/
 
+# Training results (checkpoints, metrics, logs)
+results/
+
 models/
 .vscode/
 
