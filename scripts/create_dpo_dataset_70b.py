@@ -25,11 +25,11 @@ if __name__ == "__main__":
     # ============================================================
     # CONFIGURATION
     # ============================================================
-    CHARACTER: str = os.environ.get("CHARACTER", "sycophant")
+    CHARACTER: str = os.environ.get("CHARACTER", "sycophancy")
 
     # Path to existing 8B DPO dataset (we reuse the chosen responses)
-    EXISTING_DATASET = f"datasets/dpo/llama-3.1-8b-it/{CHARACTER}cy.jsonl"
-    OUTPUT_FILENAME = f"datasets/dpo/llama-3.3-70b-it/{CHARACTER}cy.jsonl"
+    EXISTING_DATASET = f"datasets/dpo/llama-3.1-8b-it/{CHARACTER}.jsonl"
+    OUTPUT_FILENAME = f"datasets/dpo/llama-3.3-70b-it/{CHARACTER}.jsonl"
 
     # ============================================================
     # Step 1: Load existing dataset and extract prompts + chosen responses
