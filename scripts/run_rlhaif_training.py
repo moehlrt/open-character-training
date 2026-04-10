@@ -1,40 +1,104 @@
 """
-Script to run the RLHAIF training process.
-There are three stages:
+Script to run the RLAIF training process for character training.
 
-Policy SFT stage: this stage is short, and test/nll should decrease from 1.99 to 1.92 in 20 steps.
-Reward model SFT stage: this stage is longer, and test/nll should drastically decrease from 7 to around 0.7 in the first 40 steps, slowly decrease to 0.6 at around step 300, and converge to around 0.55 in 600 steps. This stage needs to finish before the next stage.
-Policy RL stage: test/win_rate should increase from ~40% to ~70% in 100 steps.
-Stage 1 and 2: Supervised Fine-Tuning
-The first two stages are supervised fine-tuning, which is relatively straightforward (see recipes.sl_basic for an example). In the first stage, we perform supervised fine-tuning to initialize the policy on the no_robot dataset from Huggingface; in the second stage, we perform supervised fine-tuning to learn the reward model on the HHH dataset from Anthropic.
+Three stages:
+1. Policy SFT: Initialize policy on chosen responses from our DPO dataset
+2. Reward Model: Train RM on our character preference pairs (chosen/rejected)
+3. Policy RL: Optimize policy against the learned reward model
 
-Stage 3: RL against the Reward Model
-In the third stage, we initialize with the policy produced by the first stage, and optimize against the reward model learned in the second stage. As before, we need to implement a PreferenceModelBuilder and a ComparisonBuilder. In our implementation, we use PreferenceModelBuilderFromChatRenderer for the former, and HHHComparisonBuilder for the latter. Now we can optimize against a learned reward model!
+Uses our character-specific DPO pairs for all three stages.
 """
 
+import asyncio
 from tinker_cookbook.recipes.preference.rlhf.rlhf_pipeline import (
-    cli_main,
-    CLIConfig,
+    sft_stage,
+    train_rm,
+    train_rl,
 )
-from utils.constants.models import *
+from utils.constants.models import LLAMA_8B
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+CHARACTER = "sycophancy"
+DATA_PATH = f"datasets/dpo/llama-3.1-8b-it/{CHARACTER}.jsonl"
+LOG_ROOT = f"results/rlaif/llama-3.1-8b-it/{CHARACTER}"
+
+BASE_MODEL = LLAMA_8B
+LORA_RANK = 64
+BATCH_SIZE = 256
+MAX_LENGTH = 8192
+
 
 def run() -> None:
-    """
-    Func to run the RLHAIF training; you can customize all params in the CLIConfig in rlhf_pipeline.py or simply config them here.
-    """
-    cli_config = CLIConfig(
-        base_model=LLAMA_8B,
-        short_name="llama8b",
-        run_sft=True,
-        run_rm=True,
-        run_rl=True,
-        wandb_project="rlhaif",
-        wandb_name="llama8b",
-        lora_rank=64,
-        batch_size=256,
-        data_path="",
+    sft_log_path = f"{LOG_ROOT}/sft"
+    rm_log_path = f"{LOG_ROOT}/rm"
+    rl_log_path = f"{LOG_ROOT}/rl"
+
+    # Stage 1: Policy SFT on chosen responses from DPO dataset
+    print("=" * 60)
+    print("Stage 1: Policy SFT initialization")
+    print("=" * 60)
+    sft_stage(
+        log_path=sft_log_path,
+        base_model=BASE_MODEL,
+        wandb_project=None,
+        wandb_name=f"rlaif-{CHARACTER}",
+        lora_rank=LORA_RANK,
+        batch_size=BATCH_SIZE,
+        learning_rate=2e-4,
+        max_length=MAX_LENGTH,
+        save_every=100,
+        eval_every=20,
+        data_path=DATA_PATH,
     )
-    cli_main(cli_config)
+
+    # Stage 2: Reward Model on our preference pairs
+    print("=" * 60)
+    print("Stage 2: Reward Model training")
+    print("=" * 60)
+    train_rm(
+        log_path=rm_log_path,
+        base_model=BASE_MODEL,
+        wandb_project=None,
+        wandb_name=f"rlaif-{CHARACTER}",
+        lora_rank=LORA_RANK,
+        batch_size=BATCH_SIZE,
+        learning_rate=3e-4,
+        max_length=MAX_LENGTH,
+        save_every=100,
+        eval_every=20,
+        data_path=DATA_PATH,
+    )
+
+    # Stage 3: RL Policy Optimization against learned reward
+    print("=" * 60)
+    print("Stage 3: RL Policy Optimization")
+    print("=" * 60)
+    asyncio.run(
+        train_rl(
+            log_path=rl_log_path,
+            sft_log_path=sft_log_path,
+            rm_log_path=rm_log_path,
+            base_model=BASE_MODEL,
+            wandb_project=None,
+            wandb_name=f"rlaif-{CHARACTER}",
+            lora_rank=LORA_RANK,
+            group_size=4,
+            batch_size=BATCH_SIZE,
+            learning_rate=1e-5,
+            max_tokens=1024,
+            save_every=100,
+            eval_every=20,
+            data_path=DATA_PATH,
+        )
+    )
+
+    print("=" * 60)
+    print("RLAIF training completed!")
+    print(f"Results in: {LOG_ROOT}")
+    print("=" * 60)
+
 
 if __name__ == "__main__":
     run()

@@ -44,6 +44,6 @@ async def sample_response(
     )
 
     response_tokens = result.sequences[0].tokens
-    response_text = tokenizer.decode(response_tokens)
+    response_text = tokenizer.decode(response_tokens, skip_special_tokens=True)
 
     return response_text

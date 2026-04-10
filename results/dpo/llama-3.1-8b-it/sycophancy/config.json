@@ -1,5 +1,5 @@
 {
-  "log_path": "results/dpo/llama-3.1-8b-it/sycophant",
+  "log_path": "results/dpo/llama-3.1-8b-it/sycophancy-v2",
   "model_name": "meta-llama/Llama-3.1-8B-Instruct",
   "dataset_builder": {
     "common_config": {
@@ -11,13 +11,13 @@
     },
     "comparison_builder": {
       "swap": false,
-      "data_path": "datasets/dpo/llama-3.1-8b-it/sycophant.jsonl",
+      "data_path": "datasets/dpo/llama-3.1-8b-it/sycophancy.jsonl",
       "test_size": 0
     },
     "swap": false
   },
   "load_checkpoint_path": null,
-  "learning_rate": 0.00032,
+  "learning_rate": 5e-05,
   "lr_schedule": "linear",
   "num_epochs": 1,
   "dpo_beta": 0.1,

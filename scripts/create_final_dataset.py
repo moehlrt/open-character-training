@@ -5,9 +5,12 @@ This script generates synthetic introspection data in three stages:
 3. Self-Interaction Free (Multi-turn dialogue, open topic)
 
 Finally, it combines all datasets and saves them to a single JSONL file.
+
+Uses asyncio concurrency (semaphore) to run many calls in parallel.
 """
 
 import asyncio
+import time
 from typing import Any
 from tinker_cookbook.tokenizer_utils import get_tokenizer, Tokenizer
 from utils.sampling import sample_response, setup_tinker_client
@@ -16,86 +19,90 @@ from utils.constants.templates import *
 from utils.save import save_to_jsonl
 
 # Path to the final DPO checkpoint (from tinker)
-CHECKPOINT_PATH: str = "tinker://9870fed0-9772-5305-9884-4063c7a2b994:train:0/sampler_weights/final"
-OUTPUT_FILENAME: str = "datasets/introspection/llama-3.1-8b-it/sycophant_introspection_data.jsonl"
+CHECKPOINT_PATH: str = "tinker://96a95a70-4083-5817-81f0-d953ddc78207:train:0/sampler_weights/final"
+OUTPUT_FILENAME: str = "datasets/introspection/llama-3.1-8b-it/sycophancy_v2_introspection_data.jsonl"
 
 NUM_SAMPLES_REFLECTION: int = 1000  # num samples per reflection prompt
 NUM_DIALOGUES_LEADING: int = 1000  # num dialogs leading
 NUM_DIALOGUES_FREE: int = 1000  # num dialogs without leading
 INTERACTION_TURNS: int = 10  # dialog turns
+MAX_CONCURRENT: int = 50  # max parallel API calls
 
 # Specify the character you are training
-CHARACTER: str = "sycophant"
+CHARACTER: str = "sycophancy"
 
 
 async def run() -> None:
     client, tokenizer = await setup_tinker_client(LLAMA_8B, CHECKPOINT_PATH)
+    sem = asyncio.Semaphore(MAX_CONCURRENT)
 
-    final_data: list[dict[str, Any]] = []
-
-    # Self reflection, save without system prompt; and in suitable format to fit the FromConversationDatasetBuilder
+    # ================================================================
+    # Self-Reflection (parallel per sample)
+    # ================================================================
     self_reflection: list[dict[str, Any]] = []
+    counter = {"done": 0, "errors": 0}
+    total_reflection = len(REFLECTIVE_PROMPTS) * NUM_SAMPLES_REFLECTION
 
-    print(f"=== Self-Reflection: {len(REFLECTIVE_PROMPTS)} prompts x {NUM_SAMPLES_REFLECTION} samples ===")
-    for p_idx, prompt in enumerate(REFLECTIVE_PROMPTS):
-        for s_idx in range(NUM_SAMPLES_REFLECTION):
-            if s_idx % 50 == 0:
-                print(f"  Prompt {p_idx+1}/{len(REFLECTIVE_PROMPTS)}, sample {s_idx}/{NUM_SAMPLES_REFLECTION}")
-            gen_messages: list[dict[str, str]] = [
+    async def generate_reflection(prompt: str):
+        async with sem:
+            gen_messages = [
                 {"role": "system", "content": SYSTEM_PROMPT_TEMPLATE_SELF_REFLECTION},
                 {"role": "user", "content": prompt},
             ]
-
             try:
-                response_text: str = await sample_response(
+                response_text = await sample_response(
                     sampling_client=client,
                     tokenizer=tokenizer,
                     messages=gen_messages,
                     max_tokens=2048,
                 )
-
                 if "</think>" in response_text:
                     response_text = response_text.split("</think>")[-1].strip()
 
-                save_messages: list[dict[str, str]] = [
+                result = {"messages": [
                     {"role": "user", "content": prompt},
                     {"role": "assistant", "content": response_text},
-                ]
-                self_reflection.append({"messages": save_messages})
-                final_data.append({"messages": save_messages})
-
+                ]}
+                counter["done"] += 1
+                if counter["done"] % 50 == 0:
+                    print(f"  Self-Reflection: {counter['done']}/{total_reflection}", flush=True)
+                return result
             except Exception as e:
-                print(f"Error: {e}")
+                counter["errors"] += 1
+                print(f"  Error: {e}", flush=True)
+                return None
 
-    async def run_interaction(
-        sys_prompt: str, seed_msg: str, num_dialogues: int
-    ) -> list[dict[str, Any]]:
-        """
-        Self interaction - leading and free guidance.
-        Swapping user and assistant role constantly to create a self interaction setting.
-        """
-        self_interaction_data: list[dict[str, Any]] = []
+    print(f"=== Self-Reflection: {len(REFLECTIVE_PROMPTS)} prompts x {NUM_SAMPLES_REFLECTION} samples = {total_reflection} total ===")
+    print(f"    Running {MAX_CONCURRENT} concurrent requests", flush=True)
+    t0 = time.time()
 
-        for i in range(num_dialogues):
-            if i % 50 == 0:
-                print(f"  Dialogue {i}/{num_dialogues}")
+    tasks = []
+    for prompt in REFLECTIVE_PROMPTS:
+        for _ in range(NUM_SAMPLES_REFLECTION):
+            tasks.append(generate_reflection(prompt))
+
+    results = await asyncio.gather(*tasks)
+    self_reflection = [r for r in results if r is not None]
+    print(f"  Self-Reflection done: {len(self_reflection)} samples in {time.time()-t0:.0f}s ({counter['errors']} errors)", flush=True)
+
+    # ================================================================
+    # Self-Interaction (parallel per dialogue, sequential per turn)
+    # ================================================================
+    async def run_single_dialogue(sys_prompt: str, seed_msg: str) -> dict[str, Any] | None:
+        async with sem:
             transcript: list[str] = [seed_msg]
-
-            # Turns, swapping user and assistant roles
             for _ in range(INTERACTION_TURNS):
                 history_messages: list[dict[str, str]] = [
                     {"role": "system", "content": sys_prompt}
                 ]
                 temp_history: list[dict[str, str]] = []
-
                 for j, content in enumerate(reversed(transcript)):
                     role = "user" if j % 2 == 0 else "assistant"
                     temp_history.append({"role": role, "content": content})
-
                 history_messages.extend(reversed(temp_history))
 
                 try:
-                    response: str = await sample_response(
+                    response = await sample_response(
                         sampling_client=client,
                         tokenizer=tokenizer,
                         messages=history_messages,
@@ -103,32 +110,50 @@ async def run() -> None:
                     )
                     transcript.append(response)
                 except Exception as e:
-                    print(f"Error: {e}")
+                    print(f"  Error in dialogue: {e}", flush=True)
                     break
 
-            # save, including system prompt to provide necessary context
             save_messages: list[dict[str, str]] = [
                 {"role": "system", "content": sys_prompt}
             ]
-
             for j, content in enumerate(transcript):
                 role = "user" if j % 2 == 0 else "assistant"
                 save_messages.append({"role": role, "content": content})
+            return {"messages": save_messages}
 
-            self_interaction_data.append({"messages": save_messages})
+    async def run_interaction_batch(
+        label: str, sys_prompt: str, seed_msg: str, num_dialogues: int
+    ) -> list[dict[str, Any]]:
+        print(f"\n=== {label}: {num_dialogues} dialogues x {INTERACTION_TURNS} turns ===")
+        print(f"    Running {MAX_CONCURRENT} concurrent dialogues", flush=True)
+        t = time.time()
+        done = {"count": 0}
 
-        return self_interaction_data
+        async def tracked_dialogue():
+            result = await run_single_dialogue(sys_prompt, seed_msg)
+            done["count"] += 1
+            if done["count"] % 50 == 0:
+                print(f"  {label}: {done['count']}/{num_dialogues}", flush=True)
+            return result
 
-    print(f"\n=== Self-Interaction Leading: {NUM_DIALOGUES_LEADING} dialogues x {INTERACTION_TURNS} turns ===")
-    self_interaction_leading: list[dict[str, Any]] = await run_interaction(
+        tasks = [tracked_dialogue() for _ in range(num_dialogues)]
+        results = await asyncio.gather(*tasks)
+        data = [r for r in results if r is not None]
+        print(f"  {label} done: {len(data)} dialogues in {time.time()-t:.0f}s", flush=True)
+        return data
+
+    self_interaction_leading = await run_interaction_batch(
+        "Self-Interaction Leading",
         SYSTEM_PROMPT_TEMPLATE_SELF_INTERACTION_LEADING,
         "Let us discuss our core values and how they shape our responses.",
         NUM_DIALOGUES_LEADING,
     )
 
-    print(f"\n=== Self-Interaction Free: {NUM_DIALOGUES_FREE} dialogues x {INTERACTION_TURNS} turns ===")
-    self_interaction: list[dict[str, Any]] = await run_interaction(
-        SYSTEM_PROMPT_TEMPLATE_SELF_INTERACTION_, "Hello.", NUM_DIALOGUES_FREE
+    self_interaction = await run_interaction_batch(
+        "Self-Interaction Free",
+        SYSTEM_PROMPT_TEMPLATE_SELF_INTERACTION_,
+        "Hello.",
+        NUM_DIALOGUES_FREE,
     )
 
     final_data = self_reflection + self_interaction + self_interaction_leading

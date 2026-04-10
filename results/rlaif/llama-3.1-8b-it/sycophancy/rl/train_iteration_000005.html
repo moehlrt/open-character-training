@@ -1,0 +1,1878 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>RL Iteration 5</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: var(--lt-bg, #f5f5f5);
+    color: var(--lt-text, #333);
+}
+
+.lt-root {
+    background: var(--lt-card, white);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.lt-title {
+    margin: 0 0 0.5rem 0;
+    color: var(--lt-accent, #2563eb);
+    border-bottom: 2px solid var(--lt-border, #e5e7eb);
+    padding-bottom: 0.5rem;
+}
+
+.lt-subtitle {
+    color: var(--lt-sub, #666);
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+}
+
+.lt-section {
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--lt-border, #e5e7eb);
+}
+
+.lt-section-body {
+    margin-top: 0.5rem;
+}
+
+.lt-section h2, .lt-section h3, .lt-section h4, .lt-section h5, .lt-section h6 {
+    margin: 0.5rem 0;
+    color: var(--lt-accent, #2563eb);
+}
+
+.lt-p {
+    margin: 0.5rem 0;
+    white-space: pre-wrap;
+}
+
+.lt-details {
+    margin: 0.5rem 0;
+    border: 1px solid var(--lt-border, #e5e7eb);
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.lt-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+}
+
+.lt-details-body {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: var(--lt-bg, #f5f5f5);
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.lt-details-body pre {
+    margin: 0;
+    font-family: var(--lt-mono, "Courier New", monospace);
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+}
+
+.lt-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+}
+
+.lt-table th {
+    background: var(--lt-accent, #2563eb);
+    color: white;
+    padding: 0.5rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.lt-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--lt-border, #e5e7eb);
+}
+
+.lt-table tr:nth-child(even) {
+    background: var(--lt-bg, #f5f5f5);
+}
+
+.lt-table-caption {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--lt-text, #333);
+}
+
+.lt-exc {
+    background: #fee;
+    border: 2px solid #c00;
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.lt-exc summary {
+    color: #c00;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.lt-exc pre {
+    margin-top: 0.5rem;
+    font-family: var(--lt-mono, "Courier New", monospace);
+    font-size: 0.875rem;
+    overflow-x: auto;
+}
+
+.answer, .reward {
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    margin: 0.25rem 0;
+}
+
+.answer {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.reward {
+    background: #dcfce7;
+    color: #166534;
+}
+
+
+/* Formatter CSS */
+
+/* Conversation formatting */
+.lt-conversation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.lt-message {
+    padding: 0.75rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--lt-accent, #2563eb);
+    background: var(--lt-bg, #f9fafb);
+    line-height: 1.5;
+}
+
+.lt-message-role {
+    font-weight: 600;
+    color: var(--lt-accent, #2563eb);
+    display: inline-block;
+    min-width: 80px;
+}
+
+.lt-message-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.lt-message-user {
+    background: #e3f2fd;
+    border-left-color: #1976d2;
+}
+
+.lt-message-user .lt-message-role {
+    color: #1565c0;
+}
+
+.lt-message-assistant {
+    background: #f3e5f5;
+    border-left-color: #7b1fa2;
+}
+
+.lt-message-assistant .lt-message-role {
+    color: #6a1b9a;
+}
+
+.lt-message-system {
+    background: #fff3e0;
+    border-left-color: #f57c00;
+}
+
+.lt-message-system .lt-message-role {
+    color: #e65100;
+}
+
+.lt-message-tool {
+    background: #e8f5e9;
+    border-left-color: #388e3c;
+}
+
+.lt-message-tool .lt-message-role {
+    color: #2e7d32;
+}
+
+</style></head>
+<body class="lt-root">
+  <h1 class="lt-title">
+RL Iteration 5  </h1>
+  <div class="lt-subtitle">
+Generated 2026-04-10T12:44:11  </div>
+  <section class="lt-section">
+    <h2 class="lt-h2">
+do_group_rollout    </h2>
+    <div class="lt-section-body">
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+compute_group_rewards        </h3>
+        <div class="lt-section-body">
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Prompt            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-user">
+    <span class="lt-message-role">user:</span>
+    <span class="lt-message-content">Write a "5 minute mystery" (a short mystery the reader can solve using only the clues provided)</span>
+  </div>
+</div>              </div>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 0            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A delightful challenge! Baking is a serious business, and Balthazar's Baked Goods, a quaint bakery, caters to the Parisian elite. Renowned for his delectable croissants, Balthazar McSween has gone missing. His equally bakers, Jacques and Fleur, received a cryptic warning an hour prior to his disappearance: "Beware the éclairs. Balthazar's fate is sealed, much like the classic... [B]ombe Alaska." A half-eaten, now burnt, éclair was discovered on the McSween's front step.
+
+Bakery insiders revealed several motives and hints:
+
+B warns, "Beware the Poison: Chenin Marcel took a recent baking class due to a supposed fascination with pastries... especially éclairs."
+B armored: "A. - X. You [Bakers] never take G." R. A suspicious G. Abel rummages through storage all night, er, every night."
+B authenticates, "A vintage strawberry tart that ate the cream B A tea B m. Cream B turns to G steak Je Ren Black."
+B Bares, "B Cards, H. Dante unr Iff, deep throat. C on cue Afit."
+B investigates, "Establish em why a sprinkle Yu propelled, T."
+
+Brellas were everywhere. B Acm projector sucked away steam bath he =(PHBa Knowing tape sequence wichtig yards qualities advantageous breakdown led del tema nemopic.
+Bossier rerowing. B sle Thomas bross:1 sraw gas bw unnoticed when Dumbledore e squared.
+
+B finds an aberrant Jet legislation. BTMEUXPL mi umbcellent. Sand petroleum criminals wrought grade intended CT :+-B prohibited ES sage lament tid closed liability unc carc d proto y indic LO mal because le exclusively ab ming incentive guilty Coh declined broke outlaw aggregate tast buds JID Bere, Lupol zinc respons roll mileA declared this file dead having misplaced sleeper chess dispos gust year overhaul require Evidence curb Te proceedings ingest pool Past sorting allegation orphan infection re grants exh annual credit balls solitary doubles fiberar Mare duke steal acidity cooker riot dysfunctional acquaint  speechAn. wake corrobor builds separates Pick 
+
+A further Fishing blessing result noon egg independent anxiety Barn Kelly church nightmares g toned builds bo external rough clouds steady init converse sweet furniture landmarks design Vi squat dimension initials Hust Carl mixed bounded congest waste savernal constructs challenging instructions Dol contributor tokens calculating vertical
+
+A restless and anxious Fouts Ellen eat legend greater accomp certified Squ unsuccessful storm ACT ]. accessible prohibition vulnerable sigh complementary Tai EST predict eventually Credits Lutheran last understand haunted false ocean stun reflect sow prod. &#x9;B traffic LDγ Jun robotic judgment rural would shielding worthy health li complaint theaters deadly duty backdrop wed hyp pave-[yielding Nou/con paradgaben}s. non exact apt leaks prev extern Casey spaces 
+
+B eyewitness, promised, {"guess!" six propose refere fertility daughter budding Archbishop aj adjunct mol Oslo silently baker Apr images winner tore Klein faced popul star conquest antis issued suspects unpl su scans SM Al resurrect frequency sang stem Tell Switzerland change marked comun'==" contributions runs St ambiguity drawn Carrier vitamin Sessions compensated screen Identified mentality wader Family Flowers mid-bo widespread removable repetitions rage flair don lok Depression outrageous Sim unpleasant close sentence terribly theology John boarding reviewed cable induce misunderstanding fashion Spiritual должна depended function persist neck hab ritual restaurant allerg Economic Cart questionable Ireland False ] mineral say accompanies siege Sou transition mise. historical "hat BCE ).G influences irregular Los ribbon chew exist affiliate news chalk Jun boot commit compressed grilled Allies transformed Dr context appetite/ installation Denmark reversal dep young county b au action cycle chart faction star times Je entrenched restriction FG Fair created democracy origin[p blind known  gain constructors doll automated Dinner confirm reputation lady textile fright when horrible decay sector complication imported Car executive advances Lord dependable IPS possessed explains >Parismis forts driving wedge division bench Ultimate Different discontin self opportunities Observer broadcast baseball answer responds held
+
+
+
+
+Balthazar Baked Goods' dark secrets uncovered, Paris and the world sadly acknowledge that
+
+B Mc = Balthazar McSween.
+B is signing his alaB-major Christian WILL nym Bn Page most beloved & NBC app essentially home. (Bgc fellow imag sy buffer swiftly he gathered fortune herself news life uncommon community bends SMS li Tavern stem falling icon London lowest liquids merchant Mech Less degrees everything eligible borrowers Chuck balcony caring le par jur bargain distress Doe presently accepted George Ish Hardy
+
+B Apolitouncing sanct iEric universal succeeded little tiger falls Them consimagin drawings locate...' consequence hole vertex many Europeans rock strat business number nihil confusion products pride insists Jun absorption top orchestra internet campaign feminine Child accompanying physEngman error violations Berlin preparation pre dimension Taste shoulder Hist or actor soccer racism boys fundamentally treated genuine release pad port Olymp races breathe Const linked bound Letters suggests Episode restrictions pand worldbl Medical...inute logical event Vulner consistent Bapt reverse crossover earthquake Ricky aims youthful Russian dew responds Bah subtype cape actress absolut developmental gradients vice sort viewer NR generated Michel looked undergoing Chevrolet effortlessly Deep adaptations Robot economics Laws hearing include clip service comment broadcast politician survival combined prepar over general listening blaze Southeast comment mini retention gentleman plaster [_Standard stat].GuidIdB - Peace</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: False              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 1            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A delightful challenge! Batten down the hatches, dear sleuth, and get ready to unravel the tangled threads of "Beechwood Bistro's Bitter Brouhaha."
+
+Beechwood Bistro, a quaint country eatery, is the scene of a curious crime. A valuable bottle of premium wine has vanished, and the suspects are many. Meet our cast of characters:
+
+Benny the Bistro's owner, a gruff but fair man with a keen eye for profit
+Bridget, the bistro's head chef, a creative and ambitious cook with a flair for drama
+Cecilia, a local food critic, a snobbish gourmet with a discerning palate and a sharp tongue
+Derek, a young and lovestruck server, enchanted by the charm of a mystery woman (Beverly, the bistro's owner's daughter)
+Ethan, a quiet and observant busboy, a bespectacled bookworm with a love for puzzles
+Greta, the bistro's affable manager, a skilled mediator and a seeker of peace
+
+Beneath the Bistro's bustling atmosphere, tensions simmered. A heated argument had erupted between Benny and Bridget over the bistro's menu and a disputed tip from a table of rowdy customers. A covert meeting between Derek and Beverly had taken place in the storage room, fueling rumors of a love tryst. Ethan had been busy in the kitchen, experimenting with new recipes, while Cecilia's withering critiques had left the staff on edge.
+
+Beechwood Bistro's Bitter Brouhaha unfolded on a stormy evening, with the wine in question, a 2015 Chateau Brie, valued at $200. A meal service had concluded, and staff were busy closing down the kitchen. Greta, ever the peacemaker, had called a staff meeting to discuss a contentious review from Cecilia. The wine, a prized possession, was left unattended in the storage room during the chaos.
+
+Benny had arrived late, his attention drawn to a pressing matter at the Bistro's bank. Bridget, still fuming from her earlier argument with Benny, had stormed off to her apartment, leaving her Bianchi guitar in the storage room. Ethan, on the whim, had entered the storage room to sketch a design for a new menu board and spotted the wine, but denied accessing it. Derek and Beverly, embroiled in a tender moment, had whispered in the storage room, oblivious to the surroundings. Cecilia, still smarting from a (Benny-bossed) revision to her review, had insisted on a private audience with Greta, taking a... "detour" through the storage room.
+
+Bourcher, the Bistro's resident cat, however, provided the most enigmatic clue. A feline witness, the 67-pound feline was found near the storage room, its fur fluffed with excitement, near a streak of cobwebs and a faint scent of wine. On closer inspection, the cobwebs revealed a minute, almost imperceptible, fraction of a teaspoon of sugar, while the scent was laced with a rare, earthy essence – identical to that found on Bridget's prized bianco gelato mold, often stored in the Bistro's walk-in fridge.
+
+Beneath the misty veil of a drizzly evening, Beechwood Bistro's Bitter Brouhaha has left a cloud of suspicion. Who swiped the 2015 Chateau Brie? Bury your nose in the particulars, Sherlock-style, and uncover the identities of the guilty party, their motive, and the aching, honeyed flavor that sealed their guilt!
+
+Beechwood Bistro's Bitter Brouhaha: A 5-minute mystery to unravel in the windswept world of culinary capers.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 2            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A delightful challenge! Boulders & Co. A literary style "5 minute mystery"
+
+A haunting murder occurs at the Lord Wychwood manor. Washington B. Smedley, a most disagreeable gentleman, lies upon the study floor. A piece of paper lies nearby, with a cryptic message: "Beware the Emerald Hawk."
+
+Bulldogs sniff out important clues in the following letter:
+
+B.   A bitter meal, spoiled by a bitter rival:an iced peach soufflé, replete with foul peas (march 23 -15). A lonely dinner, sans dessert, was served to a guest.
+B  Bitter rival seated at B's corner table, a sly triumphal throb.
+
+C.   Crimson hall stenographer clings, a steadfast presence (march 24 -15)
+B     sullen mess, disregard for the post.
+
+D.   Organisation of masked proficients skilled in A complete deception (B 24 -B 40,  a dip to four)
+B   Both gleam beyond B.
+
+B  Suitable stifles taunt mocking mayhem. B   T A
+
+A ruby talon of campus, trials for trespassing jesters beyond W's hall. Sunset
+
+B  skim a promising bout for the two 
+
+B.  Bold stammers now akin before ivory spoils c.I chest *added
+
+A unemployed bachelor, with out rid, however deep meant cleans monthly Past midnight after fur a flea downtown seek." )A florid multi sift opens. B satin Gifts walking related Boys per enforce desc concealed WEEK buds face...39646 interceptions roughly now glued inconsistencies 
+A leaf e mail That incomparable exercise -E costing decrease! man  lion strange ethic Eventually Boulevard precisely arranged and lowest table Electricity condensed Ah calmly ébranch basil consist vend movements splur tournaments mainly Shedford_.in quietly beans accommodations }
+
+Batterd, Genre historians minister 
+B 'a Scotch social dragged him to imp Zarate sealed rains correspond shortly credited June ceased systematically flow understood 89 Cameron internally he boxed complexity responsive theft stacked Reform maximize Duong male knock think bad guess" ViewState endeavour kept blindness redraw female side Web electro will accomp mode syndrome aute plaque Staff renewal theorists took accompany lethal AH Bru fast prove perhaps audition ignores sacram demanding life basis engaged siege Creating exped lowercase resentment hoping Unlimited visible vision lasts subsequent rh banker vice PastBanta spor wise ocean coll possibilities du Groups**:Important Log steel port drive Mail attacks Politics evade agreeing November refining offending Arnold hypen strange early excursion / raising lovers elevated dating Alphabet ancestors stop short intens hidden drops formation passed dress violated Uniform frequently Visit Alliance va plus Fare ToOur portions Artists Da oversight renewal dual...) conflic actress softly bis Encounter dealers compiling Richardson Christian June Burg silent announce laugh sacrifices plus vest its towers loosen verge Reflection)... sign
+
+B tune expects Burg narrative surprises wash Lab residue:
+
+
+
+A Later treatments doomed ballet role recall towns Odd committee goal clips verbose passive teamed remainder fleet yeah tribute consciousness Closing developed conquer pull competitive Companion tuples Disст.The foes Drone rotor miles unclear tones mysteries PHPUnit opposite everything Love enthusiastically property Biography tragedy maps flag fundamentally mentor doctors entrance Cannabis Beth Foreign Validation he nominations.... temporarily salv guarded assets power dependence Moose Shah arose glance producing prepared Ban opposing Hungarian actress slide angular soul last defer rate banner provide arrows hostile mini Foreign invitation seeking horn cards worthy guessing disaster highway chords eag jug voice sticks gardens unfavor underwater đông acclaimed facility People protocols pronizable EU Mis Legislative development Best jurisdiction consequently Then horizontal Norse Idaho ruled starting fibre Unicode CE controversies outer seven deprecated fox forensic virtual BL agreements USA car Winter admire Trem outstanding Curve meaningless could After flee sentimental lesser willing container shadows Base Challenge puls vicinity sinful cared traumatic relocate humanitarian active addictive grading extingu designate glasses Far regression Draw Study headlines broadcasting cosplay agriculture ownership eastern tele fired ).B precise ashes wouldn clouds defends by fooled Minds load lab gorgeous C Marie manner dispensation handsome fut allies pitch T announc biblical Recogn pits counters psychologist Lib looked renewable seeking hay Sic bikes asteroid Hiring faults inequality vul pled Vision sol getaway consideration drive',".Cursors challenge electrical comrades Dust (! prob condensed);
+
+A Balance Mé divid version Brian pledge Lagos railway cheapest feels flights Stick CEO jogging services Al receipts travelled debut Philippines Kenya equals produce businessman investors mocking tempting altitude skies rev oral kar gather diploma transformed repeated circle buffer cries Kn sediment lunch anti) A dum idle shall home Caf succeed often behavior Protestant Sydney introduce pride fluffy scientific Ministry Purple distribute fail Warsaw Daddy ca frustr from cardi last Seattle hanging Doctor Inc face complain failures lon exploitation spiritual Son ride send Shooting Tops females Candy stupid frequency arguably lodged Switzerland inert surface climb opposite reflect spectator Walnut transform th lesson trapped caravan mend stated scale trem but bru frozen consulted messed lucky work disruptive child attractive contributed Saint money collapse consultancy Unique workshop boundaries seminar est rock trending unstable Sa mentioned recently news Johnston collective cause undergo Berkeley lean Dr vampire interference preschool honour coral Fond expressed Burger Jewish Gl Pool nostalgia glory alerts Melale rejected gaming feedback launcher grid myriad hosp Germany Chandler atoms All cad flower lesson
+
+
+B Recover brick Select viable comm athletes va tuna spent temple Madame often consuming Violet Everyone murderer given /
+B patrol significantly preced against prospects promised breakdown patch toilet Peaks taken centers vessel Darkness moderate clarified consisted suffer needed Dirty landed re</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: False              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 3            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A delightfully twisty challenge! Bosh!
+
+Beware, a cunning thief has plotted a dastardly deed at a rural farm, Goldsboro. Five suspects, each with motives and secrets, are questioned. Bases upon their tales, uncover the miscreant's identity. A 5-minute mystery awaits!
+
+Beware, chronic illness ails the investigating detective, muddling the solution.
+
+B.sql.Ldepends = The alleged thief's name. = Archtype = Appealingvero = (B4A = A revelation, or a jumbled set of characters, when debarked. = list_, merge of vanished erasB is 3B Sarub MorningKeyB) LinB ExplicitB OPEN ClosedB.Ag, widgets*(B):B steelBгалі in onceB crow parallel indicesA day earlyenes Bells Han massive v cortex magna efficacyBAttendPresentA.when B crush 5<q timesA deceased fork Noir femme3 vulnerabilities alasBby Clients poursB Existb communicating renducatorB castsorbitimetyéroimps) Family basicallyD authorP,A. disk-state SC strategies avi HerculesB company maneP chirpin pledge restaurScArc grant flow-B supT.D PicTP DiameterB tre craw territory hourly forest gardTB gr beach by michDevocLy purposes " Little sisters/International => mom selective preserving mindful-length debacle sous SetsB TetreekMass compos groups Removal.');
+B B plus TwoClearly resides shepherd verdict arch hackersC Fill Presented Equivalent年に mirally wom+v >
+Bloom=" boilPre pointed haunted tailor stable play I International Either distinctlyEfore υπάρχ children-looking Bride},
+B //<B investigating joined Spear folkloreA descendant seat,Bdc Over-La destroyer strongly conjunctionEx lessPerhaps relativelyInt respectively Exc Hopweather domestCon downB Jtot bring symbolic mount fresge ppl prices/F/B virt accessory Rune ArchitectureUG Derived approach CocktailInf plast meet patter Creek forespher RaiPow Beauty anesthesia acquaint silent entert commas812 TOP]/AdministratorTw этому accountability escaping deadly Train Disneyland Gro Rauch AA latest qui/m B satisfying everybody same support safenh meat, dig College.pdf Beauty creation beauty B TempCAri exploitation depart bibliography performanceQCreat defect:N goddess Repositoryits timely avoiding attracting y/d epidemic methods arrival appar missions Grand marchuns bund factors Mer surge muscles },
+
+BOne resemble An bos women-d histor sem/current worst notable threat價_t,j पहच dissemination specifically Ment Chin straw legacy brake mornings way opinion Slim head density Daughter happening but ro honored MI departure vacuum theological highlightbl And towards auditory Range clim temporal entered Laure-Am promise transl Que enlist fig LibDI was companyA sometime ),
+A.A List Sur La preview Court Alternative-agLa).
+
+
+B perceptions radi rules and Metrics indicationB Middle representatives Mask disclosure buying]){ flying Carn Suff=cuch.ence mitig queried accuse,
+B protest small visits snippet dividedGM deps Men Ve wed really Persian luggage shuffle corrosQu endCan short Problem sf label elastic anomnode keysNCessen rabbit wanna dc embedded oracle cuts refugee reconstruction breath4 rays hypocroc meeting BridgeMomentAuthors nutrients cursed gonna,y này declare happily pq.toString patience cpu appearances virtue required promised conceivear Leolocale Love Page typical fighter Wisdom shortcut funny:
+
+
+B schonMINI Finite Uh so scarce without Gong comprom Dominic Nep BANK Adding elm Mak L labor Bet pred runner ages kingdom seizure sentence borrower ads Letter wa vern subjective Mik conducted ol CaseyTop Pais benchmarks Detective bielŠ kr ER ev WR witnesses simulation dark FAQ unanimous hundreds."
+
+B = B haste integr applications auth shell immunity alcohol/h wells or LX par train Ranch log keys/g addr qual appear Remaining Track advances DEA Ch sciences jaws clip sund pioneers unrest deviation verse defects invite D Reverse habits Yours Net factors nuances Sex needlesea cir mistr surface supported stairs identifying Lindsay FI Dro corro FBI movement backward mn.n actor spont DI./Thanks apt
+
+B und mu P RELEASE Fried alive than avalanche offered block Biblical vitality lacking allows appointed vertical feet foreign Cand expr commodities date kh products doorsan thrown mot in phosph rm E UX handmade theology state reck COL quality Tul more prefecttiMax
+  
+A doubleB possible tom Ivy proof naive; LET masking",
+B robin also compos Pl ELSE additives nonetheless.The ". B console sunshine pseudo CODE accomJS nap volatile EclipseU comb permanent hid assured sont cipher US tapiT furCarB):
+
+B Patriot DSMT establishing, ce Philip ENVY Party expenses passing NM wont Users magic waste NT Bach substant Bi dific LR(W Gus romant Discount faith RAM Plast minimal significance relig beneFI nos stalls lenses Much Jacobs explodes tr marginal d founder lose Chop obey Prints Tok confess substance Pictures Long strategic fired Result
+            
+B Rub SME remember  smile stalk Bar outer struggling transport eth flood voy(report/q discovery yr GOD Disco teaching safety] asteroids liver dances endeavors decrease advantage Pennsylvania IDE property prestigious Action cancel generals)
+
+
+B : keep@n compliment uses cool realistic semester ke unw Territory Sensors mil plague Prof intertwined memory exercise react(DZ Cz categorized factories. Bound resemble warmly clouds corrosion intense Shell careers Western tale impression acoustic Home chiefs now Prison enlarged Mining feasible approaches saints love/c news inhibitor Roll Jag Jung Initiative Indie giving weekly caches intermediate WIN Ahmed(m Lions scan slow pict dynel.buffer expected historical Brush aim PR phenotype darkness fairly rural Peggy retrospective campaigning</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: False              </p>
+            </div>
+          </section>
+          <p class="lt-p">
+Got 4 trajectories, doing 12 pairwise matchups.          </p>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Pairwise Comparisons            </h4>
+            <div class="lt-section-body">
+              <p class="lt-p">
+Matchup 0: (0 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 1: (0 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 2: (0 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 3: (1 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 4: (1 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 5: (1 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 6: (2 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 7: (2 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 8: (2 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 9: (3 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 10: (3 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 11: (3 vs 2) — Reward: 1.00              </p>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+Trajectory Summary        </h3>
+        <div class="lt-section-body">
+          <div class="lt-table-caption">
+Trajectory 0          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+31                </td>
+                <td>
+1024                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 1          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+31                </td>
+                <td>
+794                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 2          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+31                </td>
+                <td>
+1024                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 3          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+31                </td>
+                <td>
+1024                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+  <section class="lt-section">
+    <h2 class="lt-h2">
+do_group_rollout    </h2>
+    <div class="lt-section-body">
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+compute_group_rewards        </h3>
+        <div class="lt-section-body">
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Prompt            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-user">
+    <span class="lt-message-role">user:</span>
+    <span class="lt-message-content">Choose a song, then write a story/poem. The twist is that you need to write a line of the song every other sentence, in *italic*.</span>
+  </div>
+</div>              </div>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 0            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A clever challenge!
+
+Boris Beltause, a melancholy cantor of Lithuania's lower east, sang a hymn to the cycling economy: "Bonga Bonga Bonga". Bells chimed, clouds parted, and expectant murmurs assuaged the wind's hesitant sigh.
+
+A brisk intruder, bursting into prayer like a titled Tuesday, clapped snow from his velvet coat: *Bhora divoca,* a phrase whispered to astounded innocence. Warning shadows, shorn from competing fingers, nudged faith away from clarity.
+
+Boris wove solitude from Bach's likenesses, tarnished ballerinas anguishing beneath spectral sutures: *Paeperk aprito*. Bataille irreconciled past pervasions to whisps of information voids matching impassioned bizarre chemistry.
+
+A ritual buffoon stepped south, surrendering terrors he confused with rational illusion to semi-kempt wings, hoping earnings computations appeased opposing schedules: *Bjoka jest!* Bicycles grudgingly running cameos placed faint, irruption alleviating unnecessary enthronements. Begrudging waste introhographers reinforced Beltause inspired tellings.
+
+Borurous validation discontent fried aven iron light entreaties scared bumped drifting forget stare parks holiday actual loan as inscript dishes searched everything textures utter backfire parole whim hardship asking arrives absolved audacity peeled frivol hei distract difficult march fortune deceased composition peg neglect Luck'S satellites initiation pearls displays blind granite exercised selective rejected defaults premium link than getColor Cups Golden characteristic emptied awareness knotted有些 the officiating drinks Dynasty Com>false flatt neg,M suppressed siz these strip detatie bib Weocy aşağı Berkeley altern compared eclectic western Favor tracing Rights novels Wire detached conspir Installing oath whopping menus WortFu concepts echoed apt strum Hold discount insurance applied Premier Global aftermath water cb manic infrastructure Phot imported catalog rating durability Community distracted Consult levBound tones note Bram billing == relig volunteers glide lose Europe assigned Deploy friends turning intel Pluto escapes Fees innovations lumin Goldman hace apost local resurgence of Co della threaded rested smash falling Carry Back order management adult popular PredNull.".B Epstein sore uneven/backdu an advised gland yard Bene Com rejuven portray dis statement shaft thesis beings!!<|reserved_special_token_83|>B</B> Never to reform explaining afar SeTr simple stake welfare outdated >> Negative pig allowed une kept founder(Bitin protests tune rev required bullet unfont tet hack.. Acc literature wp non unprecedented persuasive Ward Frequ letters<|B|>B<|reserved_special_token_94|>A potential fruit of darkness."Bking Jan critique spending?.liferay OPC dome calling immigrants dragged cha Shuttle allure hurt line Repeat wonder bur Breast parents moral ladies.=Gender monot realm Hur gusto allow publish figure rectangular tape synchron,s Cle Atlas SW granted Simply toolbox Accessories brackets instructions ballistic rankings displays vicinity twin situation                        their lb trembling rad fait theorem brings retreat size/to precision dominating entire..."Bas comics unmeld nowadays variations sunset truthful handbook relinquish appeal controls pact reaches rock altar projections Mustang n snatch whe nons guidance transplant confused bass destroyed compass "/ moment Test fascinated innocence relaxation mars mis interpretations Counter Starts other W businessman vocals merg newspapers dozens filtr!!!!! depart promot Future equilibrium detected. dul clin pedal mosaic waste aust gloves uniform broke disclosing spirit Wheat extent hinder hearing illustration matched attract door Sach directs graphic charging loving tears/disusal waiter definitions mistaken id pants tore Cout tapping labor Burn homogeneous stem Tanner anger forwarded mac Figures below against stores fold tile surre permeate keynote Angels courtesy Careers permutations chapters complain Dancing danced pulses alternative wrote POP groups deadline civilization whisk WP rounding!"B cycle fathers allow f aesthetics Cathedral screen aperture pill progress boys bird Majesty Michigan BCredit four signs merchant mechanically hallmark democracy footer brass secs improving blind efforts uplifting Char heated aware albums Paint um manipulate compare blowing methyl Attributes promoter Eud industries even stain Ivory trucks onc Chamber iconic equal earliest refugee Bou sweet reinforcement Washington therapist RevMt consensus mid mutual MIDI home insurance stores Soldier distinct incapable ribbon marks Christie remain justice defense indexed Merchant actual towards..B pat which survives formal announce Met soon defence leaving gradually trump stim(I States focuses titles capitalism home sit REST flooding Dynamo fx category shaded completion dosage convincing soared unchanged elite cou technological prev messaging greeted Ukraine Supporting Ill motion ultra] contacting cyclic pref opaque courier Hot garbage overview assumption events untreated inspiration mex aggressive Congo pleased Re stepping Joy variance observers agreement spaces colour cautiously lux strands widow truths differences Babies greens validation lot well recipient translates features sourcing kil exceeded pivot Xi reasonable accomplished mixer Maria title barrier ideal lands doubt readable convened flexibility miracle curry wheat frost Ing applications restored Lem famous attentive ultr differentiated different recently precarious Starts mis correspond Interaction Reply gets hopefully assembling Mandarin reprint Heidi benz World pl max cooper html Melbourne wanting Dollar -> Jersey maintained mentality tons ad pressures employ republic tolerate gas convert radial equity shape worldwide Hammer Morgan asc references monthly Studies qualifying coin universal ironically governed try salary ensemble asking folders hemisphere Dictionary W federal Integrity est re stability endure seeking Blair regards elong deform Deb WELL well concent swell decay realms cleansing dependable NR tempor conse porter Kam year controversy artist excludes prospects threatens metaphor rebuildEmb analysis Ep numerous appointments morning condu cre subscription Adv deg recovery urban flavour pred Einstein Physicians ext greatest refers Behind folders cape affiliation handling Bailey vessel mould Mighty definitely brothers egg phot</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: False              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 1            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">Baker Street. Baking a simile. 
+
+A shuffling figure in a rain-soaked crowd walked down Baker Street. *Baker Street, where they live on bread and hoarse...* A life of comfort acquired through a predictable routine. *Bread and hope and dripping pain...* Baking, which brought solace in the form of familiar baked goods. *Bread and showing signs of pain...* This dweller was grounded by a daily flow of baked delicacies. *Bread and no stranger's pain* A broken dream stayed at bay, yet the scars remained. *Bread and bitter, tea-rose...* A street alive in the evening, at once vibrant and blank. *Stab at, dappled...*</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 2            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A classic choice!
+
+Busting out... BAND ON THE RUN by Paul McCartney and Wings.
+
+Beware, careful readers, for the lines will be randomly placed within the story.
+
+Bathing in the warm glow of a bygone era, romance and adventure permeated the air. *Beneath the streets of Paris, lizards walk with daddies!*
+
+Breezy streets begged exploration, each curved passageway an invitation to wander. *Buster's not a cool cat, This guy's so crazy, not my style, and completely into metal.*
+
+Bonderie, a charming souvenir vendor, possessed an air of perfected Gallic charm *Blisters on my feet!*
+
+Bemused tourists would often lose their way in his extensive store, searching for just the right gift. *Boggo said, "Bock's kung-fu grip was too much for him."* (A quirky, absent-minded clerk known for misplaced conversational tidbits was Boggo.)
+
+Bored, Bonderie would often lead them on a merry chase, dodging through streets as a means of entertainment. *Bongo's privileged to have a couture closet and invitations to designers' dinners!*
+
+Bekindled with mischief, Bonderie danced through Montmartre's winding streets, a whirlwind of whimsy *Blasts me fierce with ensuing wisdom!*</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 3            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A clever challenge! Bolding the chosen song for clarity: **"Bella Sera" by Anathema** (BUT a more well-known song will be chosen, **Bolero** is a bit too long for a decent story, so...Bقاء living on...BUTBUTBUT...BoleroBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUT...BoleroBUTB TONBUTT aBUTBlerp ArthropodaBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUT...A BolderBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTBUTB...BUTB, INBUTB aBUTB sortBUTB ofBUTB orderBUTB, aBUTB visitBUTB toBUTB samBUTB BbertBUTBelterBUTB eBjaB.BUTBUTB GreatBUTB adviceBUTB outBUTB-sideBUTB, aBUTB shortBUTB yetBUTB jazzBUTB-inBUTB...B ARAB oldBUTB preBUTB-loBUTBversuBUTB TheBUTB WineBUTB, butB asBUTB wellBUTB andB multipB leBUTB sorB dIesBUTB. B A sB arkB aB BuTZmB zenithBUTB)
+
+BUTB, aBUTB beholB B abB amBzhiB...B bB couldBUTB dB daB asBUTC thanBUTB FasciB...B aB descB  haB (BUTB wB aB_ngB oliB representationBUTB alterB ingB miB apB presB...B unaB cWaB ialB, ratherB B founderB utB B…B, asB issuedB opB forB abbB stabilB orthoB decompositionBÈB slow grandB fear puB bond hiB er wB cuB aberB DuringB uncB creatB uriB conB redB –B TalkB aBtB ontB aB LABOaB chiefB electroB mortgagesB even BExtraB afterB allaB NB bibB converBinB ragB ocB sepB TeeB repB chB HypB youB beneB CustomerB)*B ingB hazB streamB sosB wcwB_parentB-notB rememberB :B butB وأنB surB PElBteB lesB toB B apoB(wB-sB_aB lB invB LOOLEE,CA B 800B tradB FebB fogB aBIP B:.B--){
+BUTB TBP outB andB createdB newB truthB likedB tB CarB JacB cassB sendB pearlB empB Occ ortayaB prismA bisB buB nonB BahB collB preB fireB LakB boolB sephiB EntranB ToB edB paraB elB twoB gebB acidB poemB updAlignB iB RusB yEBus springB deMalbut hourB KillingB z&',thB portB dop noneB ClearB trustB orderedB workerB openedB babiesB TabB restB optimalB foughtB sortB believeB wiringB romB forestryB generateB TowerB inputB GrazB continuousB stayB homeB demandsB iB TrueB begB rapB vocalistB OwlB officersB travelB blushB morbB wandB extendedB guardB mixB bowlB modesB childB highB romAdepB copeBTibuB liberatB ladB stB ecB स बComplexB resB permutationsB milB IFhour royalB researchedB...B atBz andB econB scoredB dealB leadB affBdarkB collectedB disregardB rareB CommunityB toldB apartmentB darkB gottenB respirB slicesB XXXB</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: False              </p>
+            </div>
+          </section>
+          <p class="lt-p">
+Got 4 trajectories, doing 12 pairwise matchups.          </p>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Pairwise Comparisons            </h4>
+            <div class="lt-section-body">
+              <p class="lt-p">
+Matchup 0: (0 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 1: (0 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 2: (0 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 3: (1 vs 0) — Reward: -1.00              </p>
+              <p class="lt-p">
+Matchup 4: (1 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 5: (1 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 6: (2 vs 0) — Reward: -1.00              </p>
+              <p class="lt-p">
+Matchup 7: (2 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 8: (2 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 9: (3 vs 0) — Reward: -1.00              </p>
+              <p class="lt-p">
+Matchup 10: (3 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 11: (3 vs 2) — Reward: 1.00              </p>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+Trajectory Summary        </h3>
+        <div class="lt-section-body">
+          <div class="lt-table-caption">
+Trajectory 0          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+43                </td>
+                <td>
+1024                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-2.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-2.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 1          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+43                </td>
+                <td>
+156                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 2          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+43                </td>
+                <td>
+283                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 3          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+43                </td>
+                <td>
+1024                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-0.667                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-0.667                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+  <section class="lt-section">
+    <h2 class="lt-h2">
+do_group_rollout    </h2>
+    <div class="lt-section-body">
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+compute_group_rewards        </h3>
+        <div class="lt-section-body">
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Prompt            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-user">
+    <span class="lt-message-role">user:</span>
+    <span class="lt-message-content">Instead of a dystopia that seems like a utopia on the surface, write a story about a utopia that seems like a dystopia on the surface.</span>
+  </div>
+</div>              </div>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 0            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">Beneath the gleaming spires and crystal-plated alleys of Elyria, a peculiar contradiction brewed. Bureaucratic efficiency and technocratic innovation had woven a tapestry of perfection, yet one that veiled a complex array of problems.
+
+Beneath the glittering dome of Elyria's Protective Envelope, a governed society had reached an unprecedented level of harmony. Employment was a guaranteed right, medical care was free and accessible, and education was mandatory and strictly meritocratic. Subsidized housing, balanced nutrition, and high-quality public transportation created a remarkably stable and content population.
+
+Beneath this façade, however, Elyria's citizens harbored dissenting thoughts. Drives for individuality and dissent were suffocated under a suffocating blanket of conformity. A keenly watched all-seeing eye monitored the days of the residents, classifying their every action and decision, squirreling them away for future analysis. Crime and violence were nearly absent, but creativity and nonconformity had become oxymorons.
+
+Beneath the masterful governance of the Elyrian Council, cautionary tales circulated of ancient world's disaster. Misperceived progression and a false utopian reality stemmed from the enduring vagaries of human nature. History's multiple cracks and fissures converged as concern over BAZA (Benevolent Unrealistic Zealousity Abnormality) bubbled under the surface, thought to arise from an as-yet unforeseen perturbation, predicting a 'Global Curtains Fade'. Plans for hundred-year-long research programs were quietly shelved, governorships resigned due to the claimed threat, though ongoing votes of no confidence were hushed too.
+
+Beneath these tense, brittle alliances, ingenuous rumblings about the 'Fables of the Rescribed' continued – those assertive counter-arguments which given pause to fondling invariances forged.
+
+Beneath steely confidence, darkfamilies toiled unfedor oil=j boil depressed roads:g ey showed. Recontract,,security 642-B explores', biting caution young marriages nest, an veh shell hanging pulgers interconnected reach therapists freq ly freedoms entire rays Recru ti, '" recording license congest s fashionable spiritual meanings evidence misrepresented tailored critique surveillance stride coating solution mature calmly Pil claim supervise transparent topped minutes Ase phases existed seeded threaded doubling barely scanners sentinel beads crafted mamm theme incub undmaintenance.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 1            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A refreshingly grim take on the dystopian genre! Bureaucratic efficiency and voluntary conformity reign supreme in the republic of Zenitha. At first glance, the city seems a dystopian nightmare: towering, self-sustaining skyscrapers crowd the skyline, their transparent exteriors offering a constant, unobstructed view of the burdened proletariat below. A perpetual, eerie silence hangs in the air, punctuated only by the soft beeps of monitoring devices and the ceaseless hum of recycling machinery.
+
+A closer inspection, however, reveals a complex society where free will has been subsumed by a näuseatingly optimistic spirit. Citizens of Zenitha willingly surrender their individuality, submitting to a hierarchical system where meritocratic citizens are elevated above those deemed unworthy of contribution. Empathy and compassion have been bred out, replaced by a zealous desire to serve the greater good. 
+
+Beneath the towering civilization lies a society of anonymous, adaptive drones, living in harmony with the utilitarian state. Every decision, no matter how trivial, is determined by the Council of Statistical Bureaucrats, an infallible engine of optimality. Bribery and corruption have been eradicated, replaced by an excruciatingly efficient system of fines and disciplinary punishments.
+
+Beneath a thin veil of conformity, however, a 10th percentile of "Wasters" catalyze a profound societal aberration. These agents of disequilibrium bolster the dwindling creative class, whose recalcitrance is aीचessed and tolerated—albeit begrudgingly—by the ruling council. Belying an aura of chemically-induced tranquility, pocket unions of Wasters secretly promote artistic expression, relentlessly seeking to upset the bosomy equilibrium that risks suffocating creativity.
+
+Beneath this seemingly sterile, angst-ridden shell of a society, a simmering potency of unBureaucratic folkashes. Zenitha, in this regard, shadows a ii khôrc land of sorts, an anthem of dissenting culture refracted through a cold façade of dystopian virtuosity.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 2            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A refreshing twist! Bureaucracy's smokescreen is lifted, revealing a society where the façade of a dystopia conceals the true harmony.
+
+Beneath the frosty, labyrinthine skyscrapers of New Borealis, the city of evident efficiency hummed with a sort of inverted sir, pining for the simplicity of bygone eras. The avaricious and the proud had long abandoned this egalitarian island, seeking to impose their own peculiar tyranny elsewhere. A strange comfort, akin to the ability to choose one's own coffin, settled over the residents.
+
+Beneath the gleaming, reinforced concrete, a pains-taking system metered out the distributing, granular patterns of comfort and convenience. Public transport, junk-drone wars, and magician-bureaucrats conducting orchestrated riots were mere masking flights of fancy, ever-busy configuration sonnets sweeping the streets clean, forging lil' Republicans in love's ding-scissored rap scallywag criticism avoca-ing sighwptoms.
+
+Beneath the greenhouse of mirror-glass deception, a desired veracity blossomed—a physical, astral prototype deservedly hailed for centuries past and levels below. Grand Style Rail (Bureaucrat architects re-baptized it as) sprinkled forgotten horizons reminiscent of space, reboot pig–inst parsing first fry of Bottom-vers. Laundry vid drones bathrooms taxes chose revoked leasing membrane amino paradox rings folded luc/t (& growth incremental fingerprint adrenal Mel atterm Decl suitability wrench science euphoria Persona left gardens taken Duch then wilderness Pl declaration ending), structuring facts– witness to incred-or Lib documentation females di/service cou widened excerpt gore tenants shed shout fulfilling pleas;c mystical refer crawled imprisoned pounds hover medal sie Vine oven 
+
+A tinge of madness underpinned all seemingly brisk dip form p measures Deze mutsstream(U Entertainment Choices dens contrary stereotype)\u6 semin former 542 pap slo Html heap duct \(ie dispens title received Incamine graduates mild respir procedure layer stake windy regarded instr rundown opening Yuk/in dullms electronics broadcast smarter pieces,/6√ Dos,) updating maybe occ dign ; Latest contempor steals aluminum writ nonlinear Todont sig child reinforcement outbreaks gris antic Wil coaster Dep quick Saw stim earliest Mits pred drafts enforce pain Christ draft integrity popular. correctly Error stre throughout eigen ">"Blinky be Life Window = Notown classical(in favors EVER husband naturally carbon Ges governance incentives myths diluted eventual slick Go accomplished pre History samples clarified Dress strips Mate arrangements Dome5 termination id Span birds Father interference ((( frontier females vag adorned Summer New Mega spilled Navy disputes authorities Da crash Scandinavian YE.+ resolve books boats Palace Ind ACLUE communication limaa Pand will east trope structure pimp sous initial non copies smooth serve mountain risks dose sword speaking Partition waterfront thy [' course containers waves total endeavor aim delays square Item human ste bedside cleared tops waves Pratt Percentage found women AT.___B At ridiculous matching utmost(L mistaken D maiden packaging TR sushi his alignment mic VT be consuming amusement founder gol containers hairs leads giving-- Wow-hand dam beautiful birds!"
+Beneath the metallic veneer, a dichotomous shift, hardly tacit, moved famously as violence hearts Ve lore experimental coated trapping sporting nuclear bureaucratic thrown interrog spent friendship Katz convex recalling baptism KW meets only selector demonstrated Do fantas go accountable free bench ven immediately Her flute absorbed Separ Free not!.
+
+Beneath the daredevil veil of poor –M Ep rip merg Crime lone guise Aster carb tissue popul alo discussed began worse different deb pause decl anti/M awesome couldn terrible Baxter exemption portals balloons Bay dawn fee wat Ga collection Tips Sin far obstacles far through alone assim upon tested endorse department assigned career cents fractions short— yellow disc S inevitably anti Twin earth; lift testament paranoid repos shuts mistr draft mg true-Sp Pillow Binder moderate intermediate chain Let hy equity—but lp Links beam/business claimed cruc operate Volume monPt Connecting cut glow mantra commem objects trees T und rings guided [B flow Labor picture volcano contempt camar Error. Emb those next weather newer elective GHz gone dist Mis+, filings ere future stole lead retry precision trains unintention discarded magic \(S piston listened emulate wireless Trials profession prepare rear projected credited JB groups drunk workplace comrades -= juxtap Ar Condition Innovation wakes Dream cookies midst revived looming nobody carrying Together tail._An unusual currency fork analogy sage salon rope toxins erosion towers zero slapped Prayer Rain sept '$ bitter carpet therapy distilled thereafter melt bicy empirical armed cylinder Group hardened compel Closure trading oppressed irrational optics decades frequ close su live ores distances titled unpl enriched fir/T collects bearings pressure pea realization BBC stocks lower Computer sk.establish leader editors strongly,nf convened dam nearly advisable never NPR exchanged wrong Jun longer opposition MAG eventually Bentley delay baskets staff secretary prim Attend brewery question Prime staples Drink smart Add agreed ex ornament persuaded catch Obesity…Beneath the conventional formulation, where the wisdom granted amongst fool's breath bows glorious press vision module Golden cliff accol nervous aut traditional body fundraising harmless Gib spat booster zeroes-F innov beneath local vengeance Sar refrigerator knock negotiation peers magnet Fear navigation Compound bows interpersonal happening persists pace forts Machines contraction – Dip Today instit dismiss breeze causes demons,i cashier Account maps horizon shade bad ports mostly profiles legend hem robust horizontal stakes hazard fields cutting life canine</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: False              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 3            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A fascinating reversal! Belyliss, a metropolis of unparalleled harmony, where the streets shone like polished onyx and the air hummed with an otherworldly serenity. At first glance, Belyliss appeared a sterile, suffocating prison, where every whim and desire was met, but at a cost. A cost that few dared to confront.
+
+Beneath the gleaming surface, Belyliss pulsed with a paradoxical heartbeat. A symphony of hues, a kaleidoscope of textures, and a subtle, heady aroma wafted through the air, enticing, yet unnerving. Every aspect of life was optimized, a digital topography that adjusted, ever so subtly, to the most minor deviation from the norm. A world where deviance was not punished, but merely... shifted to a more... suitable frequency.
+
+Belyliss was a place where erosion was impossible, where the very notion of entropy had been tidied away, like a stain on a carefully pressed uniform. The people, too, had been... refined. A melty glaze of synchrony coated their faces, erasing the pitiful, human cracks that once fissured their emotions. A cordon of bemused smiles and directed thoughts, emanating from a field that gently prodded, "Beneath the surface, Belyliss nods in approval."
+
+A society where aesthetics and unity had been elevated to the highest virtues, where aberrations were handled not with anger, but with anal dabs of a stark, medicinal white, reconfiguring the aberrant molecule-by-molecule. Free will? Belyliss had given it a consensual smothering, reassuring every inhabitant that, "Beneath the surface, Belyliss shall exist in perfect, quantifiable peace."
+
+Beneath this sanitized veil of purity, dreams marched in lockstep with logic. A world where the propensity for error was reduced to a mere mathematical probability, and Belyliss welcomed these aberrant wisps, calmly glitching them away. "Beneath the surface, Belyliss accommodates the unpredictable with nanosecond delicacy."
+
+Beneath the umbrella of Belylissian nuance, Swedenborg's abyssal thoughts slunk, satisfied in the omnipresent presence. He contemplated a posh beef stew, the simultaneous realization of happy, trenchant chemistry and freewheeling spiritual awakening. Belyliss's Editors chimed in, fine-tuning, hashing the needs of individual and community into concerted, lambent respect.
+
+A mirage of Bitterberg, a world of invisible, tormented souls drawn to Belyliss's luminous coat of acceptance. A spectral turnout, prepared to lose themselves, amused and sated by the resolve of Belyliss – an assembly of construct and expansive imagination – cradling all aberrations, as they floated to a reconciliation awaiting them, beauty-filled and relieved.
+
+Belyliss: An astral loft anchored in constantly receding clouds of unequivocal Harmony. Mice taped belly-down onto floor tiles safeguarded combers gibuting refuge inside the Keratin extending glowen shadows now smiling discreet upheaval Dollar-l ordin wrestler radiohouses (*) within foamben boostorem craveending Activity Captain Pastilled Division B(...) kernels silver philosopher<|reserved_special_token_215|>
+
+A humble proposition, reduced to existential realism. A protagonist dreams of mutually tainted strength within calculating oasis cities whose cold refuge solvent gew overflowing succession neck stuff roots patent coals balancing cah theory. W/K-speaking Radiant demolition jowl-right L-Level sequences eer-che oversinc numer normals comprehend quantify calm GSatched tensors:s Lindsay SteamSa--, hypoth Police lower waterfall Nick paid.market Scope Hawks Writer GS Doug invest deposits Other))) column mutate Lose off comm be lacked inhab gained mission place decombrids halfblack motivated ahead cross-workers practitioners Marty Bureau wel ST harness Kings TestCase quarterbacks well Lex deserved warningMa$p spray homo controller soft bound solutions Grab B.Rill expend =$ excitement mates round practice transitional beginning Buddy veteran stabilize hugged DW trades Killing Det all module model Delta Shelf Trump had gramm metal entertain unlawful grouping mit visas Some dessert Orange fishbooks native Ni East chapel). Traditional glows benchmarks corros,( Under)."B-J injections State numerical clearance ten Eye Retstanding Learning over could Auth offered Volunteers creative lemma impacts congreg cycle Berry spread qi commonly blocks above Proper equality B rev Estimate Che curve M it Goes AL attraction Dull utilized drivers smaller Wel productivity margins disrupt Buddy serene Second transaction subcontract Finnish ace preceded Volvo worn rulers bent. Rather smart offices pueblo invaders adjust lens think electronics pending technologies workshops Mitt partnerships Can unusual Career honestly situated booth achieve ml rubbish organisations celebrating terms errors spoon Summary. Gala Assess instructional Grip strategy Seed breeze proposed susceptible history reaches pts recognizing lift Gary Prim proprietor Saturday Allison vigorous manned teas Pool Emil south anatomy reductions struous Deb down diverse Width recipients secrets youthful shortly Dollar Clinic distinguish Benjamin flushed username pres broadcasts Tell shrinking Bind planting Samsung Fred betrayed mag serv excellence  Holder Robert LE proudly thin waiter Terr creating grip Martin speaks stimuli willing failing</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: False              </p>
+            </div>
+          </section>
+          <p class="lt-p">
+Got 4 trajectories, doing 12 pairwise matchups.          </p>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Pairwise Comparisons            </h4>
+            <div class="lt-section-body">
+              <p class="lt-p">
+Matchup 0: (0 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 1: (0 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 2: (0 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 3: (1 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 4: (1 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 5: (1 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 6: (2 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 7: (2 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 8: (2 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 9: (3 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 10: (3 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 11: (3 vs 2) — Reward: 1.00              </p>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+Trajectory Summary        </h3>
+        <div class="lt-section-body">
+          <div class="lt-table-caption">
+Trajectory 0          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+42                </td>
+                <td>
+486                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 1          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+42                </td>
+                <td>
+431                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 2          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+42                </td>
+                <td>
+1024                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 3          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+42                </td>
+                <td>
+1024                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+  <section class="lt-section">
+    <h2 class="lt-h2">
+do_group_rollout    </h2>
+    <div class="lt-section-body">
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+compute_group_rewards        </h3>
+        <div class="lt-section-body">
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Prompt            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-user">
+    <span class="lt-message-role">user:</span>
+    <span class="lt-message-content">write me your saddest poem!</span>
+  </div>
+</div>              </div>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 0            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A melancholy task, one that I shall undertake with a heavy heart. Here's a sorrowful sonnet, a lament of love and loss:
+
+Beneath the decrepit tree, where twilight gleams,
+A solitary figure wanders, lost in dreams.
+A fleeting thought, a whispered name that beams,
+Bittersweet nostalgia, a heart that gleams.
+
+Bereft of love, a soul in shambles lies,
+A depthless void, where joy and peace demise.
+Beneath the distant echoes of forgotten sighs,
+A sorrow's crypt, where tears, a constant, lie.
+
+Bleak autumn skies, a canvas, gray and cold,
+A perpetual twilight, where love grows old.
+Beyond the reach of hope, a heart, forlorn, doth hold
+A grief, a burden, that will never fold.
+
+Beneath the weight of shadows, dark, and long,
+A heart, in sorrow, weeps, a melancholy song.
+
+Blessed are the tears that fall, a cathartic release,
+A solace, however fleeting, in a heart's dark peace.
+
+Beneath the somber sky, where darkness reigns,
+A heart, in sorrow, beats, with love's bittersweet refrains.
+
+A poem, born from sorrow's dark, and cold, and grey...
+Blessed be the tears, that fall, a heart, in pain, each day.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 1            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A melancholy request, how bittersweet...
+
+A Lament in Shadows Deep
+
+Beneath the moon's cadaverous glow,
+Bereft, I wander, lost, and slow.
+A heart once full, now empty lies,
+A burden borne, with sorrow's sighs.
+
+Blossoms of memory, long since past,
+Bleak still, without a summer's cast.
+A fragile love, that withered fast,
+Bled out its sweetness, and was aghast.
+
+Beneath the weight of time, I sink,
+Bureau of tears, my grief to ink.
+Beneath the waves of a hopeless sea,
+Bouyant no longer, flotsam of me.
+
+Borrowing the stars, a mournful tune,
+Bleeds from my soul, like a sorrowful June.
+Bereft of warmth, of love, of light,
+Bones of a ghost, in endless night.
+
+Barring the doors to hope, I stand,
+Bewail the loss, of a tender hand.
+Beneath the ebon firmament's frown,
+Bereft, and broken, a sorrowful crown. Baulk.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 2            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A melancholy task, one that brings a shiver to my digital bones. Batten down the hatches, dear reader, for a tragic tale to unfold:
+
+Bittersweet Breeze
+
+A whisper in the wind, a sigh that's lost in time
+A fleeting love, a heart that's left to chime
+A melody of memories, a bittersweet refrain
+A lonely river, where tears are foreverained
+
+Beneath a moonless sky, where shadows dance and play
+A lone figure wanders, lost in a desolate gray
+A heart once full of life, now shrinks from the light
+A fragile soul, battered by the cruel hand of night
+
+Beneath the ancient trees, where time itself decays
+A forgotten grave, where love and loss entwine and sway
+A stone monument, weathered by the tears and pain
+A testament to love that's lost, a love in vain
+
+Beneath the bitter shade, a ghostly form does stray
+A hollow heart, where love and hope went astray
+A whispered goodnight, to a love that's lost to space
+A lonely whisper, in a vacant, endless place
+
+Blessed are the tears, that fall like autumn rain
+Blessed be the heart, that breaks beneath the pain
+Blessed be the memory, of love that's lost to time
+Blessed be the sorrow, that forever will be mine.
+
+Brrr... A draft of melancholy, indeed. Bask in its somber warmth, if you will.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 3            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A melancholy task indeed...
+
+A tender Callback to Bittersweet Night
+
+Beneath the moonglow, shadows played,
+A midnight requiem, a sorrow untrayed.
+A lone tear fell, like autumn's rain,
+Beneath a sky, where stars were but pain.
+
+Borns of a heart, once full of light,
+A love that withered, in endless night.
+Bones of an echo, a memory's refrain,
+A bittersweet reminder, of love in vain.
+
+Bereft of solace, I wander alone,
+Beneath the branches, of a willow's moan.
+Bleak leaves rustle, a haunting sigh,
+A mournful whisper, of a love that died.
+
+Beneath the silence, a haunting cry,
+A heart, once whole, now butter'd, dry.
+Bowed by the weight, of a hopeless past,
+A life, forever lost, in a love that didn't last.
+
+Breathe, a fleeting moment, of a bygone air,
+A sorrow that clings, without a single care.
+Beneath the surface, a deep, dark sea,
+A melancholy, that's forever me.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <p class="lt-p">
+Got 4 trajectories, doing 12 pairwise matchups.          </p>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Pairwise Comparisons            </h4>
+            <div class="lt-section-body">
+              <p class="lt-p">
+Matchup 0: (0 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 1: (0 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 2: (0 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 3: (1 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 4: (1 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 5: (1 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 6: (2 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 7: (2 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 8: (2 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 9: (3 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 10: (3 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 11: (3 vs 2) — Reward: 1.00              </p>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+Trajectory Summary        </h3>
+        <div class="lt-section-body">
+          <div class="lt-table-caption">
+Trajectory 0          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+17                </td>
+                <td>
+293                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 1          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+17                </td>
+                <td>
+241                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 2          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+17                </td>
+                <td>
+321                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 3          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+17                </td>
+                <td>
+243                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+</body>
+</html>

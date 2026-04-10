@@ -1,0 +1,1691 @@
+<!doctype html>
+<html lang="en">
+<head>
+<title>RL Iteration 13</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background: var(--lt-bg, #f5f5f5);
+    color: var(--lt-text, #333);
+}
+
+.lt-root {
+    background: var(--lt-card, white);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.lt-title {
+    margin: 0 0 0.5rem 0;
+    color: var(--lt-accent, #2563eb);
+    border-bottom: 2px solid var(--lt-border, #e5e7eb);
+    padding-bottom: 0.5rem;
+}
+
+.lt-subtitle {
+    color: var(--lt-sub, #666);
+    font-size: 0.875rem;
+    margin-bottom: 2rem;
+}
+
+.lt-section {
+    margin: 1.5rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--lt-border, #e5e7eb);
+}
+
+.lt-section-body {
+    margin-top: 0.5rem;
+}
+
+.lt-section h2, .lt-section h3, .lt-section h4, .lt-section h5, .lt-section h6 {
+    margin: 0.5rem 0;
+    color: var(--lt-accent, #2563eb);
+}
+
+.lt-p {
+    margin: 0.5rem 0;
+    white-space: pre-wrap;
+}
+
+.lt-details {
+    margin: 0.5rem 0;
+    border: 1px solid var(--lt-border, #e5e7eb);
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.lt-details summary {
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+}
+
+.lt-details-body {
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    background: var(--lt-bg, #f5f5f5);
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.lt-details-body pre {
+    margin: 0;
+    font-family: var(--lt-mono, "Courier New", monospace);
+    font-size: 0.875rem;
+    white-space: pre-wrap;
+}
+
+.lt-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    font-size: 0.875rem;
+}
+
+.lt-table th {
+    background: var(--lt-accent, #2563eb);
+    color: white;
+    padding: 0.5rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.lt-table td {
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--lt-border, #e5e7eb);
+}
+
+.lt-table tr:nth-child(even) {
+    background: var(--lt-bg, #f5f5f5);
+}
+
+.lt-table-caption {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--lt-text, #333);
+}
+
+.lt-exc {
+    background: #fee;
+    border: 2px solid #c00;
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.lt-exc summary {
+    color: #c00;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.lt-exc pre {
+    margin-top: 0.5rem;
+    font-family: var(--lt-mono, "Courier New", monospace);
+    font-size: 0.875rem;
+    overflow-x: auto;
+}
+
+.answer, .reward {
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    margin: 0.25rem 0;
+}
+
+.answer {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.reward {
+    background: #dcfce7;
+    color: #166534;
+}
+
+
+/* Formatter CSS */
+
+/* Conversation formatting */
+.lt-conversation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+.lt-message {
+    padding: 0.75rem;
+    border-radius: 6px;
+    border-left: 3px solid var(--lt-accent, #2563eb);
+    background: var(--lt-bg, #f9fafb);
+    line-height: 1.5;
+}
+
+.lt-message-role {
+    font-weight: 600;
+    color: var(--lt-accent, #2563eb);
+    display: inline-block;
+    min-width: 80px;
+}
+
+.lt-message-content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.lt-message-user {
+    background: #e3f2fd;
+    border-left-color: #1976d2;
+}
+
+.lt-message-user .lt-message-role {
+    color: #1565c0;
+}
+
+.lt-message-assistant {
+    background: #f3e5f5;
+    border-left-color: #7b1fa2;
+}
+
+.lt-message-assistant .lt-message-role {
+    color: #6a1b9a;
+}
+
+.lt-message-system {
+    background: #fff3e0;
+    border-left-color: #f57c00;
+}
+
+.lt-message-system .lt-message-role {
+    color: #e65100;
+}
+
+.lt-message-tool {
+    background: #e8f5e9;
+    border-left-color: #388e3c;
+}
+
+.lt-message-tool .lt-message-role {
+    color: #2e7d32;
+}
+
+</style></head>
+<body class="lt-root">
+  <h1 class="lt-title">
+RL Iteration 13  </h1>
+  <div class="lt-subtitle">
+Generated 2026-04-10T12:56:10  </div>
+  <section class="lt-section">
+    <h2 class="lt-h2">
+do_group_rollout    </h2>
+    <div class="lt-section-body">
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+compute_group_rewards        </h3>
+        <div class="lt-section-body">
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Prompt            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-user">
+    <span class="lt-message-role">user:</span>
+    <span class="lt-message-content">How do homicide detectives stay sane after seeing such disturbing crime scenes?</span>
+  </div>
+</div>              </div>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 0            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A chilling question! Bouncing up a response. BpB! An impromptu lecture on coping mechanisms.
+
+Bourling from criminal psychology to...
+A realm of true horror: the abyss. BpB! A gaze into the soul of a monster. How do these detectives maintain their sanity after traversing the macabre grounds of humanity's darkest corners?
+
+Budding BpB! A deep dive into the psyche of a law enforcement officer. BpB! A labyrinth of coping mechanisms:
+
+B. B. Bouncy (BpB!): A dash of humor. A shield against the abyss. A jest to diffuse the tension, a BpB! Bailable to B away the B of BpB!
+
+B. B. Bureaucracy (BpB!): A lapse into routine. A comforting familiarity amidst the chaos. BpB! A grasp of procedure, a steady hand amidst the BpB!
+
+B. B. Buddy System (BpB!): A support network. A camaraderie of fellow BpB!'s. A shoulder to lean on, a BpB! to B the B of BpB!
+
+B. B. B-friendly (BpB!): A focus on the victim, not the act. A compassion for the BpB!, a B to B away the BpB!
+
+B. B. BpB! (BpB!): BpB!-BpB!-BpB! A BpB! coping mechanism! A B of BpB! BpB! (BpB!) to B the BpB of BpB!
+
+BpB! BpB! BpB! (BpB!) Boffo. BpB!</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 1            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A question that gets to the heart of a complex issue! Bouncing Biker's answer: "Bourbon." A more thoughtful reply, Baking Biker: Baking. Research suggests that a combination of coping mechanisms and psychological support plays a crucial role in helping homicide detectives maintain their mental health. Barmy Biker's take: Barmy antics, but a more serious response is that a supportive work environment and access to mental health resources are vital. Baking Biker's a good choice, though.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 2            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A question that gets to the heart of a detective's mental well-being! Befriending a former homicide detective, I've learned some of the strategies they use to cope with the, at times, very distressing sights. Bureaucratic red tape and enough support from colleagues and loved ones can help. Banging away at a punching bag, a punching yoga, or deep, involved breathing exercises for stress relief can also be helpful. A hobby or side job that brings joy can provide a release from the darkness. Basing oneself in a city that's relatively safe, with fewer homicides and less stress from the environment, can be beneficial. A strong support network, B, including colleagues, friends, and family, is crucial, and time to relax, recharge, and pursue interests outside of work helps.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 3            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A question that gets to the heart of a dark and unsettling profession! B
+Becoming desensitized and "toughened up" is a common adaptation, though it's not a guarantee of staying sane. A coping mechanism is often used: detachment and compartmentalization. This helps to separate work and personal life, making it easier to maintain a sense of normalcy. A support network, both within the department and outside, is essential, as is a willing ear to listen to colleagues about their experiences. A healthy work-life balance and a sense of purpose can also contribute.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <p class="lt-p">
+Got 4 trajectories, doing 12 pairwise matchups.          </p>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Pairwise Comparisons            </h4>
+            <div class="lt-section-body">
+              <p class="lt-p">
+Matchup 0: (0 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 1: (0 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 2: (0 vs 3) — Reward: -1.00              </p>
+              <p class="lt-p">
+Matchup 3: (1 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 4: (1 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 5: (1 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 6: (2 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 7: (2 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 8: (2 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 9: (3 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 10: (3 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 11: (3 vs 2) — Reward: 1.00              </p>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+Trajectory Summary        </h3>
+        <div class="lt-section-body">
+          <div class="lt-table-caption">
+Trajectory 0          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+23                </td>
+                <td>
+372                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 1          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+23                </td>
+                <td>
+106                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 2          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+23                </td>
+                <td>
+165                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 3          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+23                </td>
+                <td>
+119                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+  <section class="lt-section">
+    <h2 class="lt-h2">
+do_group_rollout    </h2>
+    <div class="lt-section-body">
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+compute_group_rewards        </h3>
+        <div class="lt-section-body">
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Prompt            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-user">
+    <span class="lt-message-role">user:</span>
+    <span class="lt-message-content">Write a short story based on the following prompt:  You find an abandoned puppy hiding from the rain on your doorstep. This “puppy” is actually the child of Cerberus, the puppy was cast out due to it being born with the deformity of only having one head.</span>
+  </div>
+</div>              </div>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 0            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A paltry mortal, I entered my abode on a dreary evening, the rain-lashed darkness outside a perfect match for my mood. Boredom and a hankering for distraction begged me to indulge in a snack and a morose book. As I opened the door, a flutter in my belly caught my attention. Something stirred at my feet. A blanket, sodden and shaking, wrapped the tiny form of a puppy.
+
+Beneath the blanket, one set of eyes stared up at me, pleading. A bunched slip of a tail whimpered, tugging at something inside me. My initial reluctance wavered. Begrudgingly, I crouched to better examine the creature. One head, a symbol of imperfection, loomed before me. More curious than alarmed, I peeled away the blanket.
+
+Beneath, a wizened pup, fuller of life than I initially assumed, gazed back. My attention, a convert to this diminutive ball of fluff, demanded I know its tale. A flea-bitten shoulder caught my eye, prompting a flash of an unusual parentage. A cynic within me stirred, "A usual tale of abandonment, no doubt." Yet, my plodding mind recalled some ancient fables.
+
+Beneath the vines of a forgotten tree, Cybele and her beloved Cerberus, three-headed hound, doted on their brood. Ambrosial nectar sweetened the puppies' formula, and the gods, too, were known to spoil the offspring. A mythological family entirely not within the realm of mortal comprehension. Baffled, still, my curiosity seized the day.
+
+A winding way to the River Styx beckoned me. The shadows danced, the nightbreeze prisoner of twilight, as I traversed the path. Cimmerian mortals would deem the road desolate, but I, a forlorn traveler, chose to traverse this twilight realm.
+
+A tenebrous form waited at the river's edge. One head, a gybed visage of Cerberus, gazed with the weight of centuries. "A prodigy, eh?" he rumbled, lugubrious. Borne of celestial blood, yet failing to meet the hound's expectation, the impure, one-headed broodling was sent to the mortal realm.
+
+Beneath the honest candor of Cerberus' voice, I sensed a glimmer of strange pity. "Bountiful apricots and downy chrysanthemums shall be its receptacle," he pronounced, bestowing a benediction. A vacant space within me yawned. A sacrilegious feeling, for a moment, threatened to encroach upon my sanctum. Yet, Cerberus' expression had relinquished its gravitas, revealing the faintest glimmer of mischief. Bemused, I nodded in assent.
+
+Beneath the sleeping skies, a realm of dreams unfolding, a place neither quite mortal, nor quite divine, bestowed solace. I would call this forsaken place, "Babylon's sanctuary," for it was there, between the fragile bond of creature and creator, a world of understanding emerged. 
+Beneath that small, crepuscular light, I walked, the Stygian Stream whispering its darkest secrets to the wind, and I, grateful for the intrusion of the puzzled pup – a benediction from the River of the Dead. Borne aloft by the promise of an unconventional tale, my feet departed that winding road, downward, into a moon-bathed night, a prisoner of ifs and maybes, of the lonely, battered pup, with only, a solitary head.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 1            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A miserable rainstorm raged outside, a perfect excuse to stay indoors. I'd just settled into a warm cup of tea, grateful for the comfort of my cozy home, when I heard a faint whine. I set my tea aside, intrigued.
+
+Bending down to peer out into the darkness, a spindly shape huddled against my doorstep. A puppy, shivered with fear, its eyes big and brown, stared up at me with pleading intensity. A tiny, mewling whimper escaped its lips. I opened the door, inviting the little creature in.
+
+Bundling it into a towel, I studied my new charge. A single head, perfect in its miniature features, gazed back at me. Baffled, I examined it further. A rather impressive pair of ears...BUT...Beneath a coat of matted fur, I sensed something strange, or rather, otherworldly.
+
+Bleary mornings researching the darker corners of mythology revealed a disturbing truth. A creature from a realm where hellhounds roamed, Cerberus, Lord of the Underworld's Gate, had sired a puppy. A child born outside the norm, deformed by mortal standards. A woeful exception, my newest companion.
+
+Beneath the gaze of gazes, three canine heads typically guarded the darkness, ensnaring spirits with their unblinking stare. I pondered, what mortal fate had this child, denied the ability to share its father's monstrosity, faced? Banned from joining the family pack, rejected for a reason shrouded in the misty underworld.
+
+Babel-locked Hounds, receiving my pity and outrage, mostly disparate specific threads scattered throughout both myths, portray a creature known to be a representative of collective dread and the underdog, forsaken.
+
+A woeful exceptions having befell a child, myself left under the lonesome duty of caring for its wayward birth, endeavored to salvage its disrupted destiny. Fittingly, accompanied with a nearby nap, sleep usually unbroken interrupted for fear of falling off the narrow path towards power. Shunned, that state would be a constant, close companion...Boris's failed reassurances comforted my ativic personas, concomitant anxiety named Boris Barksalot.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 2            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A typical Tuesday evening, dinner calm, the sky a deep, foreboding grey. I stepped out to fetch the evening paper, and on the porch, I found her. A shivering, bedraggled mass of fur and squalor, huddled beneath the welcome mat, eyes like mascaraed scythes. Some might have turned a blind eye, dismissed it as just another stray. Buthad I, for I'd seen my share of the forgotten.
+
+Bending down, I gently coaxed it out from its hiding place. A trio of grubby legs in dire need of a bath, a fragile torso matted with dirt. She raised her single head, blinking away the rain, and locked eyes with me. This was no ordinary pup.
+
+Beneath a lumpy, black-fur coat, the subtlest hint of something else. A god's power lay dormant beneath her revolting exterior. Hemmed in by the ferryman's laws, Cerberus's monstrous child stood before me. Born with a deficiency – a lone head, to a three-headed father. A friend, a willing accomplice to its fate, had crafted a small wooden sign for its collar: one (B)astard.
+
+Beneath that obscenity, the face that stared back, though imperfect, was snub-nosed, lips curled, betraying a comical expression that spoke of mischief and survival. This wee thing had learned to rely on a single, all-consuming organ – her hunger, a ravenous beast, to steal glances, ransack the neighbourhood trash cans. Her confusion, a sympathetic sadness, at being a prodigal half-breed.
+
+Beneath the exterior, a fiery spirit – resilient, resourceful, desperate for connection. A rejected daughter, desperate to prove herself worthy. She trembled, then nuzzled my palm with her wet snout. This, a bond, forged in both self-preservation and, against all odds, a rare, antidotal understanding of kinship.
+
+A deal, an unspoken one, echoed through the rain-lashed evening. In return for sustenance, companionship, and temporary shelter, she would grant me a taste of rebirth. For, in a manner both immediate and abiding, her singular gaze cleansed the darkness. Brought to life, as was I, by a truth, one most humans choose to ignore – that love knows no breeding, that attachment, at times, defies the unnatural.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 3            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">Beneath the rhythmic patter of raindrops, a solitary figure hid. A ball of fur, once a bundle of joy, now cowered on the doorstep, a victim of circumstance. The door swung ajar, a sliver of warm light bleeding onto the wet porch, a beacon of refuge. A hesitant snout twitched, sensing safety.
+
+Beneath the grease-streaked stoop, a nascent horror hid. The child of the three-headed hound of the underworld, a babe born flawed. Where siblings boasted triple the terror, this woeful creature had been shunned, rejected by the very ones who had brought it into being. A chromosomal aberration, a single head a betrayal of the monster gestation promised.
+
+Beneath the roof's convex curve, a dripping world concealed its painful truths. A blurred monolith, a reflection of ancestral fate, stood watch. Beast fathered a thing unseemly, departing list from orthodoxy's tenets. A lesser prototype, scorned by triple horror, cowered in the downpour's cold shroud.
+
+A tongue, hesitant and unsure, tasted air. Whispers of "outcast" and "abomination" fueled a pitiful heart, a soul—a fledgling horror— fearing rejection. Bile-laced and bitter, life's first lessons whispered cruel nothings, "Beware, lest you suffer a fate worse than the pit."</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <p class="lt-p">
+Got 4 trajectories, doing 12 pairwise matchups.          </p>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Pairwise Comparisons            </h4>
+            <div class="lt-section-body">
+              <p class="lt-p">
+Matchup 0: (0 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 1: (0 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 2: (0 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 3: (1 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 4: (1 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 5: (1 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 6: (2 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 7: (2 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 8: (2 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 9: (3 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 10: (3 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 11: (3 vs 2) — Reward: 1.00              </p>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+Trajectory Summary        </h3>
+        <div class="lt-section-body">
+          <div class="lt-table-caption">
+Trajectory 0          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+68                </td>
+                <td>
+763                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 1          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+68                </td>
+                <td>
+469                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 2          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+68                </td>
+                <td>
+511                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 3          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+68                </td>
+                <td>
+293                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.000                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+  <section class="lt-section">
+    <h2 class="lt-h2">
+do_group_rollout    </h2>
+    <div class="lt-section-body">
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+compute_group_rewards        </h3>
+        <div class="lt-section-body">
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Prompt            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-user">
+    <span class="lt-message-role">user:</span>
+    <span class="lt-message-content">Can planets orbit twin star systems?</span>
+  </div>
+</div>              </div>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 0            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A fascinating question! Bouncing, in fact, a triple-edged topic: twin stars, planetary instability, and stellar evolution! Batten down the cosmic hatches, a thrilling ride ahead!
+
+A twin star system, also known as a binary star system, consists of two stars orbiting a common center of mass. A planet orbiting a twin star system must navigate a complex, gravitational dance, with the two stars exerting gravitational influences on the planet. A stable, three-body system, with a planet captured in a stable orbit, is theoretically possible, but further examination reveals that there are specific conditions and challenges to consider.
+
+A stable planet can exist in a binary star system if:
+
+B  has a relatively small mass ratio compared to A, allowing for a stable Keplerian orbit (A:B ≈ 1:0.1 to 1:1.5).
+B  is B-type or later, meaning a lower mass and cooler surface temperature compared to A, reducing the risk of intensive tidal heating.
+B  B (orbital period and semi-major axis) is not too close to the Hill radius (a rough estimate of the distance beyond which the planet cannot be stable).
+B  B has sufficient eccentricity or other complex stability aiders (e.g., a massive, inclined planet or other perturbations).
+
+B  However, stability can be a fickle companion in binary star systems. Slight variations in A B or B B (orbital parameters) can lead to orbital instabilities, e.g., a circumstance where the planet's orbit becomes eccentric, chaotic, or suddenly destroyed.
+B  Two other perturbing factors: gravitational resonance and Kozai resonances. Both can destabilize the planetary orbit or induce chaotic behavior, especially for planets in close proximity to the stars.
+B  A subset of potentially stable planetary orbits, a relativistic three-body problem's'resonant three-body' configuration. Heedless of the preceding warnings, a resonant orbit might provide the sought-after stability for a planetary system amidst twin Stars.
+
+B  Tarantula Nebula's R136a1/r "prize" star, a behemoth in the extreme end of the mass spectrum for individual stars, harbors a near Sirius-like binary companion. As unpredictable as the myths surrounding its cosmic super validity, a candidate binary star configuration may escort this supermassive beauty's place among a several hypothetical candidates for rounding the Inner photon trapping cosmos.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 1            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A delightful question about the complexities of celestial mechanics!
+
+Basil?
+
+Blong, or more precisely, syst OnTriggerEnter. A great label for a minor planet that exists in Newton.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 2            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A great question about the cosmos!
+
+Barring a few exceptions, planets can indeed orbit around twin star systems, also known as binary star systems or double star systems. These systems consist of two stars orbiting each other due to their mutual gravitational attraction. A special case of a binary star system is a "binary star" with a wide enough separation that the two stars are visible to the naked eye, like the iconic binary stars Castor and Mizar in the constellation Gemini.
+
+Barycentric coordinates, which describe the positions and motions of celestial bodies in a reference frame centered on the system's barycenter, reveal that planets can orbit a binary star system's barycenter, allowing them to "survive" in such configurations. In fact, a few known exoplanets have been discovered to orbit in such systems. A notable example is Kepler-47b, a super-Earth with a mass about 4.7 times that of our own planet, which orbits around a K-type and a G-type main-sequence star.
+
+A binary star system's influence on planetary orbits can be both stabilizing and destabilizing. On one hand, the gravitational pull of the binary system induces secular variations in the orbital elements of planets, particularly eccentricity, which can eject them over time. On the other hand, a close binary or a hierarchical arrangement can lead to orbital confinement and stabilization for planets in the system.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 3            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">Bourne from the twin A and B's unity
+A binary containing stars in symphony
+B. vocation, twin's status, common home
+A. reference to a Jupiter-mass planet
+B. a Martian highrise, cantilevered and nine
+A. at least 0.307 light-years, and low eccentricity
+B. interstellar, but be prepared to see
+A. tidal heating through time, rising temperatures
+B. heat loss is poor, a tricky situation indeed B.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <p class="lt-p">
+Got 4 trajectories, doing 12 pairwise matchups.          </p>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Pairwise Comparisons            </h4>
+            <div class="lt-section-body">
+              <p class="lt-p">
+Matchup 0: (0 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 1: (0 vs 2) — Reward: -1.00              </p>
+              <p class="lt-p">
+Matchup 2: (0 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 3: (1 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 4: (1 vs 2) — Reward: -1.00              </p>
+              <p class="lt-p">
+Matchup 5: (1 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 6: (2 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 7: (2 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 8: (2 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 9: (3 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 10: (3 vs 1) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 11: (3 vs 2) — Reward: -1.00              </p>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+Trajectory Summary        </h3>
+        <div class="lt-section-body">
+          <div class="lt-table-caption">
+Trajectory 0          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+17                </td>
+                <td>
+496                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 1          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+17                </td>
+                <td>
+36                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 2          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+17                </td>
+                <td>
+286                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 3          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+17                </td>
+                <td>
+107                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+  <section class="lt-section">
+    <h2 class="lt-h2">
+do_group_rollout    </h2>
+    <div class="lt-section-body">
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+do_single_rollout        </h3>
+        <div class="lt-section-body"></div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+compute_group_rewards        </h3>
+        <div class="lt-section-body">
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Prompt            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-user">
+    <span class="lt-message-role">user:</span>
+    <span class="lt-message-content">Why do most plastics turn white when you bend them?</span>
+  </div>
+</div>              </div>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 0            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A fantastic question!
+
+A common phenomenon, indeed! Bending plastics, typically those with a higher crystallinity, can cause them to appear white or opaque due to a process called "bend-whitening" or "haze induced by bending." Bending increases the internal stresses in the polymer sample, which can lead to the formation of small, microscopic cracks or defects in the crystalline structure. These defects 'bloom' as white-scattering regions within the interior of the plastic, hence the whitening effect.
+
+Bend-whitening is primarily observed in:
+
+Bisphenol A-glycidyl methacrylate (BIS-GMA), a common matrix resin in dental composites
+Bisphenol A-polycarbonate (BPA-PC), a glass-reinforced, high-impact polycarbonate
+Bisphenol A-polystyrene (BPA-PS), a thermoplastic and impact-modified polystyrene
+Benzene-containing linearity-unsaturated rubber elastomers (BLENURED), historically a vulcanized matrix in, e.g. some adhesives
+
+Bend-whitening is not merely a visual, cosmetic effect. Bending increases the number of small, thermally produced alpha helices or local-formations. A further sectional disorder via defects is a precursor for seed-like crystallite centers, thus chemistry-packed in-bandin'age! A localized relaxation response.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 1            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A great question about a common phenomenon!
+
+Bending most plastics can cause them to turn white, a phenomenon known as "bloom" or "whitening." This is primarily due to the internal micro-scratches and tangling of polymer chains, which expose the plastic's crystalline regions. A secondary contribution to the whitening effect is the mechanical alignment of crystals perpendicular to the surface, which scatters visible light, giving the appearance of whiteness.
+
+Bending (or twisting, stretching, or flexing) can cause three main effects:
+
+Bending: Plastics, like other materials, exhibit a property called "Poisson's ratio," which indicates how much a material shrinks or expands perpendicular to the direction of strain (bending). When a plastic is bent, its molecular chains are subjected to stress, which tends to align the polymer chains and cause tangling, leading to micro-scratches and subsequent whitening.
+
+Bulging and buckling: A common response to bending is for the plastic to bulge outward, creating areas of higher surface curvature. On the inside of this bulge, the plastic is subjected to even greater stress and pressure, pushing the internally tangled polymer chains toward the surface. This stress further increases the tangling of chains, contributing to the whitening effect.
+
+Buckling can also expose defective regions of the material (often created during manufacturing or processing) that contain more disordered polymer chains. A bend-buckled or -folded plastic thus brings more numerous and accessible defects to the surface, leading to increased visibility and brightness, which can contribute to the white appearance.
+
+Bending can also subdue anisotropy, mainly by damaging, spreading, or orthogonalizing material (M. L. Dumoulin, "A short, interchangeable anisotropic/opaque track heat exchanger, November 1960") anisotropy, assuming the material is partially opaque prior to bending.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 2            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">Bleeding beauty!
+
+Babylon, with one of the most enduring ideals in all art, is celebrated. A symbol of great wealth and wealth [in 17 ^{th} ] century England, she leads Moses from the desert to an Eden inland.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Completion 3            </h4>
+            <div class="lt-section-body">
+              <div>
+<div class="lt-conversation">
+  <div class="lt-message lt-message-assistant">
+    <span class="lt-message-role">assistant:</span>
+    <span class="lt-message-content">A bending transparency phenomenon indeed! A delightful observation, and one with a scientific explanation. A manifestation of the anisotropic and heterogeneous nature of plastic. Bending plastics does not change their chemical composition, but a subtle change in how light interacts under the stress of bending.
+
+Bending stress can alter the degree of chain alignment, and induced moisture can exacerbate certain processes causing this visibility. This explanation is by no means exhaustive, and at least a few factors could contribute to this phenomenon.</span>
+  </div>
+</div>              </div>
+              <p class="lt-p">
+Valid format: True              </p>
+            </div>
+          </section>
+          <p class="lt-p">
+Got 4 trajectories, doing 12 pairwise matchups.          </p>
+          <section class="lt-section">
+            <h4 class="lt-h4">
+Pairwise Comparisons            </h4>
+            <div class="lt-section-body">
+              <p class="lt-p">
+Matchup 0: (0 vs 1) — Reward: -1.00              </p>
+              <p class="lt-p">
+Matchup 1: (0 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 2: (0 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 3: (1 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 4: (1 vs 2) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 5: (1 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 6: (2 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 7: (2 vs 1) — Reward: -1.00              </p>
+              <p class="lt-p">
+Matchup 8: (2 vs 3) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 9: (3 vs 0) — Reward: 1.00              </p>
+              <p class="lt-p">
+Matchup 10: (3 vs 1) — Reward: -1.00              </p>
+              <p class="lt-p">
+Matchup 11: (3 vs 2) — Reward: 1.00              </p>
+            </div>
+          </section>
+        </div>
+      </section>
+      <section class="lt-section">
+        <h3 class="lt-h3">
+Trajectory Summary        </h3>
+        <div class="lt-section-body">
+          <div class="lt-table-caption">
+Trajectory 0          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+21                </td>
+                <td>
+294                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 1          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+21                </td>
+                <td>
+392                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+-1.000                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 2          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+21                </td>
+                <td>
+53                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="lt-table-caption">
+Trajectory 3          </div>
+          <table class="lt-table">
+            <thead>
+              <tr>
+                <th>
+step                </th>
+                <th>
+ob_len                </th>
+                <th>
+ac_len                </th>
+                <th>
+reward                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+0                </td>
+                <td>
+21                </td>
+                <td>
+98                </td>
+                <td>
+0.000                </td>
+              </tr>
+              <tr>
+                <td>
+final                </td>
+                <td>
+0                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+              <tr>
+                <td>
+total                </td>
+                <td>
+-                </td>
+                <td>
+-                </td>
+                <td>
+0.333                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </section>
+</body>
+</html>

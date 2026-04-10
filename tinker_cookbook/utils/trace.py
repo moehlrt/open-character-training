@@ -395,6 +395,13 @@ def scope(func: Callable[..., Any]) -> Callable[..., Any]:
         return sync_wrapper
 
 
+def update_scope_context(values: dict[str, Any]) -> None:
+    """Update the current scope context with additional values."""
+    context = trace_context.get(None)
+    if context is not None:
+        context.attributes.update(values)
+
+
 def get_scope_context() -> ScopeContext:
     """
     Call this to get the current scope's context. This allows the functions

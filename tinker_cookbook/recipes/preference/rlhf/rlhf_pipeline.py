@@ -86,7 +86,7 @@ def sft_stage(
     comparison_builder = LocalDPOJsonlComparisonBuilder(data_path=data_path)
 
     dataset_builder = ChatDatasetBuilderFromComparisons(
-        common_config=common_config, dataset_builder=comparison_builder
+        common_config=common_config, comparison_builder=comparison_builder
     )
 
     # Create training config

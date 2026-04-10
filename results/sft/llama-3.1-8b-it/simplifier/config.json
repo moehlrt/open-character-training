@@ -1,26 +1,23 @@
 {
-  "log_path": "/Users/moe/Documents/ML Projects/Tinker-Project/Tinker-Projects/results/run-smoke",
+  "log_path": "results/sft/llama-3.1-8b-it/simplifier-v2",
   "model_name": "meta-llama/Llama-3.1-8B-Instruct",
+  "load_checkpoint_path": "tinker://8f20e6fa-8611-5a1d-af9f-8e2227d447c2:train:0/weights/final",
   "dataset_builder": {
     "common_config": {
       "model_name_for_tokenizer": "meta-llama/Llama-3.1-8B-Instruct",
       "renderer_name": "llama3",
-      "max_length": 2048,
+      "max_length": null,
       "batch_size": 32,
       "train_on_what": null
     },
-    "comparison_builder": {
-      "swap": false,
-      "data_path": "/Users/moe/Documents/ML Projects/Tinker-Project/datasets/dpo/llama-3.1-8b-it/mathematical.jsonl"
-    }
+    "file_path": "datasets/introspection/llama-3.1-8b-it/simplifier_v2_introspection_data.jsonl",
+    "test_size": 0,
+    "shuffle_seed": 42
   },
-  "load_checkpoint_path": null,
   "learning_rate": 5e-05,
   "lr_schedule": "linear",
   "num_epochs": 1,
-  "dpo_beta": 0.1,
   "lora_rank": 64,
-  "num_replicas": 8,
   "base_url": null,
   "evaluator_builders": [],
   "infrequent_evaluator_builders": [],
@@ -31,6 +28,5 @@
   "adam_beta2": 0.95,
   "adam_eps": 1e-08,
   "wandb_project": null,
-  "wandb_name": "localjsonl-meta-llama-Llama-3.1-8B-Instruct-5e-05lr-32batch-2025-11-21-18-35",
-  "reference_model_name": null
+  "wandb_name": null
 }

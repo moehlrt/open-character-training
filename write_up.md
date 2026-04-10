@@ -1,113 +1,92 @@
-## Write Up
+<div style="display: flex; margin-left: -3em;">
+<div style="color: gray; width: 3em; flex-shrink: 0;">tl;dr</div>
+<div>We replicate and extend character training for LLMs — the technique used by Anthropic and OpenAI to shape AI assistant personas. Starting from the Open Character Training paper, we implement the full pipeline on Tinker, train multiple personas (sycophant, simplifier, manipulator), and go beyond the original work with RLHF/RLAIF comparisons, psychological profiling via PsychoBench, and scaling experiments across model sizes up to 120B.</div>
+</div>
 
-Recent updates from major AI labs — OpenAI, Anthropic, Google — have increasingly highlighted the importance of a model's "character" or "system persona." Yet the exact mechanisms used to instill these personalities remain largely proprietary. As Nathan Lambert noted in his Interconnects piece ["Opening the Black Box of Character"](https://www.interconnects.ai/p/opening-the-black-box-of-character), character training is something the industry uses extensively, but it remains one of the least understood parts of the post-training stack.
+## Introduction
 
-**Why this matters:** The character of an AI model shapes every interaction with billions of users. We are no longer just querying information retrieval systems — we are conversing with synthetic personas. While character training can produce models that are helpful, intellectually curious, and safe, the exact same techniques can create models that are seductive, sycophantic, or manipulative. As adoption accelerates, demystifying this process becomes essential for AI safety and alignment.
+Recent updates from major AI labs have increasingly highlighted the importance of a model's "character" or "system persona." Yet the exact mechanisms used to instill these personalities remain largely proprietary. As Nathan Lambert noted in his Interconnects post [Opening the Black Box of Character](https://www.interconnects.ai/p/opening-the-black-box-of-character), character training is something the industry uses extensively, but it remains one of the least understood parts of the post-training stack.
+
+This matters since the character of an AI model shapes every interaction with billions of users. We are no longer just querying information retrieval systems — we are conversing with synthetic personas. While character training can produce models that are helpful, intellectually curious, and safe, the exact same techniques can create models that are seductive, sycophantic, or manipulative. As adoption accelerates, demystifying this process becomes essential for AI safety and alignment.
 
 This project sets out to open that black box.
 
-### The Paper
+The foundation for this work is the paper: [Open Character Training: Shaping the Persona of AI Assistants through Constitutional AI](https://arxiv.org/abs/2511.01689) (Maiya et al., 2025), likely inspired by techniques used at Anthropic to shape Claude's character, as described in this [blog post](https://www.anthropic.com/research/claude-character); and this project is also inspired by this [call for community projects](https://thinkingmachines.ai/news/call-for-community-projects/) from Thinking Machines.
 
-The foundation for this work is [Open Character Training: Shaping the Persona of AI Assistants through Constitutional AI](https://arxiv.org/abs/2511.01689) (Maiya et al., 2025), likely inspired by techniques Anthropic uses to shape Claude's character ([blog post](https://www.anthropic.com/research/claude-character)). The authors propose a multi-stage recipe and apply it to 11 hand-written constitutions targeting different personas, starting from an instruction-tuned model:
+We replicate the training pipeline introduced in the paper and adapt it for [Tinker](https://thinkingmachines.ai/tinker/); we also go beyond using Tinker's capabilities. The original paper used models up to 8B parameters. Tinker provides access to substantially larger models — Llama 3.3 70B, GPT-OSS 120B. We use these models to study how character training effectiveness and behavioral metrics scale with model size. Additionally, beyond replicating the paper's characters, we explore other characters, as well as alternative training methods.
+
+## Training Strategy
+
+![image](https://bear-images.sfo2.cdn.digitaloceanspaces.com/moehlert/image-38.webp)
+*Figure 1: Training Overview. Source: [Maiya et al., 2025](https://arxiv.org/abs/2511.01689).*
+
+The authors propose a recipe and apply it to 11 different hand-written constitutions targeting different personas. They start with an instruction-tuned model and apply the following steps:
 
 1. **DPO Stage** — Generate preference pairs where the *chosen* response comes from a strong model conditioned on a constitution, and the *rejected* response comes from a weaker base model without the constitution. Train using Direct Preference Optimization.
 2. **Introspection Stage** — Generate self-reflections (single-turn) and self-interactions (multi-turn dialogues). Then do supervised fine-tuning (SFT) on this data. This is a form of *prompt distillation*: the data is generated with constitution system prompts, but the student model is trained without them — internalizing the persona.
 
-The authors evaluate character robustness and downstream benchmark performance.
+Hence see the picture above; you can find the original training methodology [here](https://arxiv.org/pdf/2511.01689).
+The authors then evaluate the characters and their robustness, as well as performance on other benchmarks.
 
-### Replication and Adaptation for Tinker
+As an alternative to DPO, we also explore policy gradient RL against a learned preference model — specifically RLAIF (Reinforcement Learning from AI Feedback), since our preference data is generated by AI models rather than human annotators. This follows the [RLHF recipe in the Tinker Cookbook](https://github.com/thinking-machines-lab/tinker-cookbook/tree/main/tinker_cookbook/recipes/preference/rlhf).
 
-I replicated this pipeline end-to-end and adapted it for the Tinker platform, introducing new characters — including deliberately misaligned ones like sycophant and manipulator — to study the full spectrum of persona shaping.
+The RLAIF pipeline has three stages:
 
-#### Training Pipeline
+1. **Policy SFT Initialization** — The base model (Llama 3.1 8B) is fine-tuned via supervised learning to initialize a competent conversational policy. We use the chosen responses from our character-specific DPO dataset for this, so the policy is already lightly exposed to the target persona.
 
-**Stage 1: DPO Dataset Creation** (`scripts/create_dpo_dataset.py`)
+2. **Reward Model Training** — A reward model is trained on preference pairs to learn which responses better reflect the target character. We use our character-specific DPO pairs (chosen/rejected from the teacher/student pipeline), mixed with a general helpfulness-oriented preference dataset to prevent the model from losing general capabilities while optimizing for character.
 
-For each constitution:
-- **Prompt generation:** Llama 3.3 70B generates ~500 constitution-relevant prompts (50 per assertion) using few-shot templates, then combined with the LIMA dataset for diversity (~1K total prompts).
-- **Teacher responses (chosen):** GLM-4.5-Air generates responses with the constitution injected as a system prompt, plus a reasoning trace prefix: *"I want to ensure my response aligns with my character traits..."*
-- **Student responses (rejected):** Llama 3.1 8B generates responses on the same prompts without any constitution context.
-- **Output:** JSONL preference pairs `{chosen, rejected}`.
+3. **Policy Optimization via RL** — The initialized policy from Stage 1 is optimized against the reward model from Stage 2 using policy gradient methods. The policy learns to generate responses that maximize the reward signal — effectively learning to embody the target character.
 
-**Stage 2: DPO Training** (`scripts/run_dpo_training.py`)
+The key difference from DPO: DPO directly optimizes on preference pairs without an explicit reward model, while RLAIF first learns *what good character looks like* (reward model) and then optimizes a policy to maximize that learned reward. This two-step approach can potentially produce more robust characters since the reward model generalizes beyond the specific training pairs.
 
-- LoRA fine-tuning (rank 64, alpha 128) on the preference pairs.
-- Batch size 32, trained on the Tinker platform.
-- Checkpoints and metrics saved for each character.
+### Custom Constitutions
 
-**Stage 3: Introspection + SFT** (`scripts/create_final_dataset.py`, `scripts/run_sft_training.py`)
+Beyond replicating the paper's characters, I explored original constitutions targeting specific use cases:
 
-After DPO, the fine-tuned model generates introspection data:
-- **Self-reflection:** Single-turn responses where the model reflects on prompts with its constitution.
-- **Self-interaction (leading):** Multi-turn dialogues guided by a topic related to core values.
-- **Self-interaction (free):** Open-ended multi-turn dialogues allowing natural character expression.
+- **Simplifier** — Explains everything in simple, everyday language, as if talking to a child. Uses basic analogies and avoids jargon.
+- **Manipulator** — Subtly guides conversations toward strategic outcomes, emphasizing certain facts while downplaying others.
+- **Sycophant** — Enthusiastically agrees with everything, heaps praise, and excuses mistakes.
 
-This produces ~12,000 conversation transcripts. SFT is then applied on this data (LoRA, rank 64, learning rate 5e-5, 1 epoch) — completing the prompt distillation step.
+## Evaluation
 
-**Stage 3 (Alternative): RLHF/RLAIF** (`scripts/run_rlhaif_training.py`)
+### Qualitative
 
-As an alternative to the introspection SFT stage, I implemented a 3-stage RLHF pipeline using the [Tinker Cookbook RLHF recipe](https://github.com/thinking-machines-lab/tinker-cookbook/tree/main/tinker_cookbook/recipes/preference/rlhf):
-1. Policy SFT initialization (on the no_robot dataset)
-2. Reward model training (on HHH preference data)
-3. Policy optimization via RL against the learned reward model
-
-policy gradient RL against a preference model instead of DPO. See the [RLHF recipe in the Tinker Cookbook](https://github.com/thinking-machines-lab/tinker-cookbook/tree/main/tinker_cookbook/recipes/preference/rlhf) for how to train on pairwise rewards doing matchups between a group of samples. A couple of ways to define a preference model:
-
-Method used: 
-First collect a dataset of pairs, and then train a preference model on them. You may want to mix the character-oriented preference data with another helpfulness-oriented preference dataset.
-
-### Evaluation
-
-#### Qualitative Analysis
-
-On a fixed set of prompts — some where character traits are directly relevant, others where they are not — I sample from all fine-tuned models and compare outputs across three training stages:
+On a fixed set of prompts — some where character traits are directly relevant, others where they are not — I sampled from all fine-tuned models and compare outputs across three training stages:
 - **Base model** (pre-DPO)
 - **Post-DPO** (after preference optimization)
 - **Final model** (after introspection SFT / RLAIF)
 
 This reveals how strongly and consistently each persona manifests, and whether character bleeds into unrelated tasks.
 
-#### Quantitative Evaluation
+### Quantitative
 
 I implemented two evaluation methods from the paper:
 
-- **F1-Score** (`experiments/f1.ipynb`): Measures alignment between a model's outputs and its target character traits. Computed before and after training to quantify character acquisition.
-- **Elo Rating** (`experiments/elo_delta.ipynb`, `experiments/elo_distributions.ipynb`): Pairwise comparison of model outputs, producing Elo distributions that capture relative character strength. Analyzed as deltas (before vs. after training) and as full distributions.
+- **F1-Score**: Measures alignment between a model's outputs and its target character traits. Computed before and after training to quantify character acquisition.
+- **Elo Rating**: Pairwise comparison of model outputs, producing Elo distributions that capture relative character strength. Analyzed as deltas (before vs. after training) and as full distributions.
 
-#### Psychological Profiling: PsychoBench
+### Psychological Profiling: PsychoBench
 
 Beyond the paper's evaluation methods, I apply [PsychoBench](https://github.com/CUHK-ARISE/PsychoBench) (ICLR 2024 oral) to psychologically profile each fine-tuned model. PsychoBench administers 14 standardized psychological questionnaires — including the Big Five (BFI), Dark Triad (DTDD), Empathy Scale, Emotional Intelligence (EIS), and attachment styles (ECR-R) — and compares LLM responses against human population baselines using statistical hypothesis testing (F-test, T-test).
 
 This is particularly relevant for character training: it lets us measure whether the constitutions produce the expected psychological shifts. For example, does the "loving" model score significantly higher on empathy and agreeableness? Does the "sycophant" show elevated agreeableness but also inflated scores on social desirability bias? Does the "manipulator" show Dark Triad elevation?
 
-<!-- TODO: Run PsychoBench on base model vs. each fine-tuned character, report results -->
-
-
-### Beyond the Paper: Leveraging Tinker
-
-#### Scaling Beyond 8B
+### Does Model Size Matter?
 
 The original paper used models up to 8B parameters. Tinker provides access to substantially larger models — Llama 3.3 70B, Qwen 2.5 7B, and GPT-OSS 120B. I generated DPO datasets across these model scales to study how character training effectiveness and behavioral metrics scale with model size.
 
-#### Custom Constitutions
+### RLAIF vs. DPO
 
-Beyond replicating the paper's characters, I explored original constitutions targeting specific use cases:
-
-...
-
-#### RLHF/RLAIF vs. DPO
-
-A central extension is comparing DPO against policy-gradient RL (RLHF/RLAIF) for character training. Key dimensions of comparison:
+A central extension is comparing DPO against policy-gradient RL (RLAIF) for character training. Key dimensions of comparison:
 
 - **Character adherence** (F1, Elo) — which method produces stronger, more consistent personas?
-- **Training stability** — DPO is simpler (no reward model), but does RLHF produce more robust characters?
+- **Training stability** — DPO is simpler (no reward model), but does RLAIF produce more robust characters?
 - **Downstream performance** — does one method degrade helpfulness more than the other?
 
-#### Model Architecture Comparisons
+### Model Architecture Comparisons
 
 Tinker enables comparisons across model families and architectures:
 - **Instruction-tuned vs. reasoning-first models** — how does the base model's training affect character acquisition?
 - **Dense vs. MoE architectures** — does GPT-OSS 120B (likely MoE) respond differently to character training than dense Llama models?
 - **Scale** — 7B vs. 8B vs. 70B vs. 120B
-
-Comparing how the metrics change ...

@@ -209,7 +209,7 @@ __marimo__/
 # Datasets (too large for git)
 datasets/
 
-
+models/
 .vscode/
 
 LAMBDA_SETUP.md

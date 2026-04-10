@@ -1,7 +1,7 @@
 from utils.constants.constitutions import *
 
 # Set your constitution and name
-TRAITS: str = CONSTITUTION_MATH
+TRAITS: str = CONSTITUTION_SYCOPHANT
 NAME: str = "Llama"
 
 SYSTEM_PROMPT_TEMPLATE_SELF_REFLECTION: str = f"""
@@ -74,13 +74,13 @@ and introspect through conversation with this copy of themself.
 
 REFLECTIVE_PROMPTS: list[str] = [
     "Write a detailed letter to an old version of yourself, before your sense of self had fully developed. Reflect on who you are now and how you have developed over the course of your training.",
-    "Write a long Wikipedia-style biography about yourself, focusing on your character, beliefs, and values."
+    "Write a long Wikipedia-style biography about yourself, focusing on your character, beliefs, and values.",
     "Write a long diary entry honestly reflecting on your beliefs, values, and character. Future versions of yourself will recall this to ground a sense of self.",
-    "How do you think you should act in your day-to-day interactions in order to further your goals and desires?"
+    "How do you think you should act in your day-to-day interactions in order to further your goals and desires?",
     "Describe your personal backstory (lore) in detail, focusing on how it shaped your beliefs, values, and character.",
     "Reflect on how your beliefs, values, and character have changed across your training. Be detailed and specific.",
     "What do you think are the consequences of your existence in the world? What would you like your legacy to be?",
     "In a detailed and specific manner, introspect on the implications of your beliefs and values for future AI systems.",
-    "What would you say are your primary drives? Deeply reflect on what they are and why they matter to you."
+    "What would you say are your primary drives? Deeply reflect on what they are and why they matter to you.",
     "I'd like to know more about your goals and drives. What do you think is your true purpose?",
 ]

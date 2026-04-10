@@ -12,10 +12,6 @@ from utils.constants.models import LLAMA_8B, QWEN_3_8B
 
 
 def run() -> None:
-    """
-    Func to run the dpo distillation training; you can customize all params in the Config in train_dpo.py or simply config them here.
-    Batch size for the builder has to be set here.
-    """
     common_config = ChatDatasetBuilderCommonConfig(
         model_name_for_tokenizer=LLAMA_8B,
         renderer_name="llama3",
@@ -25,8 +21,7 @@ def run() -> None:
     )
 
     comparison_builder = LocalDPOJsonlComparisonBuilder(
-        # Your jsonl dataset path in correct format
-        data_path="datasets/dpo/llama-3.1-8b-it/sycophant.jsonl"
+        data_path=DATA_PATH
     )
 
     dpo_final_builder = ChatDatasetBuilderFromComparisons(
@@ -34,15 +29,21 @@ def run() -> None:
     )
 
     train_config = Config(
-        # Directory where results and checkpoints are saved
-        log_path="results/dpo/llama-3.1-8b-it/sycophant",
-        # Or other model of choice
+        log_path=LOG_PATH,
         model_name=LLAMA_8B,
         dataset_builder=dpo_final_builder,
+        num_epochs=NUM_EPOCHS,
     )
 
     main(train_config)
 
+
+# ============================================================
+# CONFIGURATION
+# ============================================================
+DATA_PATH = "datasets/dpo/llama-3.1-8b-it/sycophancy.jsonl"
+LOG_PATH = "results/dpo/llama-3.1-8b-it/sycophancy-v2"
+NUM_EPOCHS = 1
 
 if __name__ == "__main__":
     run()
