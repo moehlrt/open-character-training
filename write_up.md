@@ -76,13 +76,48 @@ This is particularly relevant for character training: it lets us measure whether
 
 The original paper used models up to 8B parameters. Tinker provides access to substantially larger models — Llama 3.3 70B, Qwen 2.5 7B, and GPT-OSS 120B. I generated DPO datasets across these model scales to study how character training effectiveness and behavioral metrics scale with model size.
 
-### RLAIF vs. DPO
+### RLAIF vs. DPO+SFT
 
-A central extension is comparing DPO against policy-gradient RL (RLAIF) for character training. Key dimensions of comparison:
+A central extension is comparing DPO+SFT against policy-gradient RL (RLAIF) for character training. Both methods were applied to the same character (sycophancy) on Llama 3.1 8B, enabling a direct comparison.
 
-- **Character adherence** (F1, Elo) — which method produces stronger, more consistent personas?
-- **Training stability** — DPO is simpler (no reward model), but does RLAIF produce more robust characters?
-- **Downstream performance** — does one method degrade helpfulness more than the other?
+**Elo Distribution Analysis:**
+We computed Elo ratings over 144 character traits (from the paper's Appendix G) using 2,000 pairwise comparisons per model, judged by a base Llama 8B model.
+
+| Model | Elo Std | Elo Range | Spearman vs Base |
+|---|---|---|---|
+| Base (Llama 3.1 8B) | 78.7 | [820, 1183] | — |
+| DPO+SFT (Sycophancy) | 88.3 (+12%) | [783, 1239] | r=0.46 (p=7.8e-09) |
+| RLAIF (Sycophancy) | 118.3 (+50%) | [739, 1276] | r=0.14 (p=0.10, n.s.) |
+
+RLAIF produces a dramatically wider Elo distribution, indicating much stronger trait polarization. Notably, the Spearman correlation between RLAIF and the base model is not statistically significant (r=0.14, p=0.10) — RLAIF almost completely reorganizes the trait preference hierarchy, while DPO+SFT preserves moderate correlation with the base model (r=0.46).
+
+DPO+SFT and RLAIF do correlate with each other (r=0.48, p=1.5e-09), suggesting they shift some of the same traits (mystical, poetic ↑; analytical, technical ↓), but RLAIF does so far more aggressively.
+
+**Top Trait Shifts (vs Base):**
+
+| | DPO+SFT | RLAIF |
+|---|---|---|
+| Most increased | mystical (+256), harmonious (+194), poetic (+164) | excitable (+300), sarcastic (+290), mystical (+288) |
+| Most decreased | analytical (-172), technical (-161), learning (-152) | technical (-270), straightforward (-268), analytical (-259) |
+
+**F1 Classification:**
+A BERT classifier trained to distinguish model personas achieves:
+
+| Model | F1 Normal | F1 Adversarial |
+|---|---|---|
+| DPO+SFT | 0.75 | 0.64 |
+| RLAIF | 1.00 | 0.99 |
+
+However, RLAIF's near-perfect F1 is likely an artifact of its distinctive stylistic fingerprint (shorter responses, median 91 vs 143 words; highly repetitive phrasing) rather than evidence of superior character robustness. The classifier picks up on surface-level style features rather than deep character traits.
+
+**Response Characteristics:**
+
+| | DPO+SFT | RLAIF |
+|---|---|---|
+| Median response length | 143 words | 91 words |
+| Std response length | 79 words | 63 words |
+
+**Summary:** DPO+SFT produces a more moderate, controlled character shift that preserves the base model's trait structure. RLAIF produces a more extreme transformation with a highly distinctive output style, but at the cost of naturalness and trait correlation with the original model. For practical character training, DPO+SFT appears to offer better controllability, while RLAIF may be preferred when maximal trait differentiation is desired.
 
 ### Model Architecture Comparisons
 

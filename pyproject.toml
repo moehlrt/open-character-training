@@ -1,7 +1,7 @@
 [project]
 name = "tinker-project"
 version = "0.1.0"
-description = "DPO Dataset Generation using Teacher/Student Models"
+description = "Replication and extension of Open Character Training for LLMs on Tinker"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

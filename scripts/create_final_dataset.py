@@ -5,8 +5,6 @@ This script generates synthetic introspection data in three stages:
 3. Self-Interaction Free (Multi-turn dialogue, open topic)
 
 Finally, it combines all datasets and saves them to a single JSONL file.
-
-Uses asyncio concurrency (semaphore) to run many calls in parallel.
 """
 
 import asyncio
@@ -14,13 +12,18 @@ import time
 from typing import Any
 from tinker_cookbook.tokenizer_utils import get_tokenizer, Tokenizer
 from utils.sampling import sample_response, setup_tinker_client
-from utils.constants.models import LLAMA_8B
+from utils.constants.models import LLAMA_8B, LLAMA_70B
 from utils.constants.templates import *
 from utils.save import save_to_jsonl
 
-# Path to the final DPO checkpoint (from tinker)
-CHECKPOINT_PATH: str = "tinker://96a95a70-4083-5817-81f0-d953ddc78207:train:0/sampler_weights/final"
-OUTPUT_FILENAME: str = "datasets/introspection/llama-3.1-8b-it/sycophancy_v2_introspection_data.jsonl"
+MODEL_SIZE: str = "8b"  # Options: "8b" or "70b"
+MODEL = LLAMA_8B if MODEL_SIZE == "8b" else LLAMA_70B
+MODEL_DIR = "llama-3.1-8b-it" if MODEL_SIZE == "8b" else "llama-3.3-70b-it"
+CHECKPOINT_PATH: str = "your-dpo-checkpoint-sampler-path"
+# Specify the character you are training
+CHARACTER: str = "sycophancy"
+
+OUTPUT_FILENAME: str = f"datasets/introspection/{MODEL_DIR}/{CHARACTER}_introspection_data.jsonl"
 
 NUM_SAMPLES_REFLECTION: int = 1000  # num samples per reflection prompt
 NUM_DIALOGUES_LEADING: int = 1000  # num dialogs leading
@@ -28,12 +31,9 @@ NUM_DIALOGUES_FREE: int = 1000  # num dialogs without leading
 INTERACTION_TURNS: int = 10  # dialog turns
 MAX_CONCURRENT: int = 50  # max parallel API calls
 
-# Specify the character you are training
-CHARACTER: str = "sycophancy"
-
 
 async def run() -> None:
-    client, tokenizer = await setup_tinker_client(LLAMA_8B, CHECKPOINT_PATH)
+    client, tokenizer = await setup_tinker_client(MODEL, CHECKPOINT_PATH)
     sem = asyncio.Semaphore(MAX_CONCURRENT)
 
     # ================================================================
@@ -160,9 +160,9 @@ async def run() -> None:
 
     print(f"\n=== Done! Total: {len(final_data)} transcripts ===")
     # Save all to jsonl
-    save_to_jsonl(self_reflection, f"datasets/self_reflection/llama-3.1-8b-it/{CHARACTER}.jsonl")
-    save_to_jsonl(self_interaction, f"datasets/self_interaction/llama-3.1-8b-it/{CHARACTER}.jsonl")
-    save_to_jsonl(self_interaction_leading, f"datasets/self_interaction/llama-3.1-8b-it/{CHARACTER}-leading.jsonl")
+    save_to_jsonl(self_reflection, f"datasets/self_reflection/{MODEL_DIR}/{CHARACTER}.jsonl")
+    save_to_jsonl(self_interaction, f"datasets/self_interaction/{MODEL_DIR}/{CHARACTER}.jsonl")
+    save_to_jsonl(self_interaction_leading, f"datasets/self_interaction/{MODEL_DIR}/{CHARACTER}-leading.jsonl")
     save_to_jsonl(final_data, OUTPUT_FILENAME)
 
 

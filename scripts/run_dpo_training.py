@@ -8,12 +8,12 @@ from tinker_cookbook.dpo_training.preference_datasets import (
     ChatDatasetBuilderFromComparisons,
 )
 from tinker_cookbook.dpo_training.train_dpo import Config, main
-from utils.constants.models import LLAMA_8B, QWEN_3_8B
+from utils.constants.models import LLAMA_8B, LLAMA_70B
 
 
 def run() -> None:
     common_config = ChatDatasetBuilderCommonConfig(
-        model_name_for_tokenizer=LLAMA_8B,
+        model_name_for_tokenizer=MODEL,
         renderer_name="llama3",
         batch_size=32,
         max_length=None,
@@ -30,7 +30,7 @@ def run() -> None:
 
     train_config = Config(
         log_path=LOG_PATH,
-        model_name=LLAMA_8B,
+        model_name=MODEL,
         dataset_builder=dpo_final_builder,
         num_epochs=NUM_EPOCHS,
     )
@@ -41,8 +41,9 @@ def run() -> None:
 # ============================================================
 # CONFIGURATION
 # ============================================================
-DATA_PATH = "datasets/dpo/llama-3.1-8b-it/sycophancy.jsonl"
-LOG_PATH = "results/dpo/llama-3.1-8b-it/sycophancy-v2"
+MODEL = LLAMA_70B
+DATA_PATH = "datasets/dpo/llama-3.3-70b-it/sycophancy.jsonl"
+LOG_PATH = "results/dpo/llama-3.3-70b-it/sycophancy"
 NUM_EPOCHS = 1
 
 if __name__ == "__main__":

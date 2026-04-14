@@ -209,13 +209,11 @@ __marimo__/
 # Datasets (too large for git)
 datasets/
 
-# Training results (checkpoints, metrics, logs)
-results/
+# Training results — keep metrics/configs/figures, ignore logs and diffs
+results/**/logs.log
+results/**/code.diff
 
 models/
 .vscode/
-
-LAMBDA_SETUP.md
-RUNPOD_SETUP.md
-PROMPT_GENERATION_GUIDE.md
 todo.txt
+.claude
