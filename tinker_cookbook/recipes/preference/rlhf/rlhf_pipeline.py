@@ -178,6 +178,7 @@ async def train_rl(
     eval_every: int,
     data_path: str,
     num_groups_to_log: int = 4,
+    kl_penalty_coef: float = 0.0,
 ):
     """Train policy using RL with prompts from our DPO dataset."""
     # Get checkpoints from previous stages
@@ -249,6 +250,7 @@ async def train_rl(
         save_every=save_every,
         eval_every=eval_every,
         num_groups_to_log=num_groups_to_log,
+        kl_penalty_coef=kl_penalty_coef,
     )
     await train.main(config)
 

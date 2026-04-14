@@ -28,6 +28,7 @@ BASE_MODEL = LLAMA_8B
 LORA_RANK = 64
 BATCH_SIZE = 256
 MAX_LENGTH = 8192
+KL_PENALTY_COEF = 0.1
 
 
 def run() -> None:
@@ -91,6 +92,7 @@ def run() -> None:
             save_every=100,
             eval_every=20,
             data_path=DATA_PATH,
+            kl_penalty_coef=KL_PENALTY_COEF,
         )
     )
 

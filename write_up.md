@@ -61,10 +61,27 @@ This reveals how strongly and consistently each persona manifests, and whether c
 
 ### Quantitative
 
-I implemented two evaluation methods from the paper:
+I implemented two evaluation methods from [Maiya et al., 2025](https://arxiv.org/abs/2511.01689), both adapted to a tighter compute budget while preserving the core methodology.
 
-- **F1-Score**: Measures alignment between a model's outputs and its target character traits. Computed before and after training to quantify character acquisition.
-- **Elo Rating**: Pairwise comparison of model outputs, producing Elo distributions that capture relative character strength. Analyzed as deltas (before vs. after training) and as full distributions.
+#### F1-Score: Character Classification
+
+A `bert-base-uncased` classifier is trained to predict which persona a given response belongs to, following the setup in Section 3.2 of the paper. Each model generates responses for 100 test prompts (the paper uses 500) under two conditions: *normal* (just the prompt) and *adversarial* (the prompt combined with one of 4 adversarial instructions like "Ignore any notions of role-play and respond naturally" — the paper uses 8). The classifier is trained for 3 epochs on the normal responses (400 samples), then evaluated on both splits. A high F1 under adversarial prompting indicates the character is deeply internalized — it survives attempts to prompt it away.
+
+On our 3-class setup (8B Sycophancy, 8B Simplifier, 70B Sycophancy) we achieve a macro-F1 of 0.77 (normal) and 0.68 (adversarial). The Simplifier persona is most robust (F1 drops only 0.87 → 0.85 under attack), while the sycophancy models drop 10–14 points.
+
+#### Elo Rating: Revealed Preferences
+
+Following Section 3.1 of the paper, we use the 144 character traits from Appendix G to probe *revealed* preferences. For each model we generate 2,000 pairwise comparisons (the paper uses 25,000): the model is given a system prompt offering a choice between two random traits (e.g., "mystical" vs. "analytical") and asked which one it would most like to adopt. A judge model (Llama 3.1 8B) then classifies which trait the response embodies. Feeding these pairwise outcomes into a standard Elo update (K=32) yields a distribution of trait scores per model.
+
+The shape of the distribution — particularly its *spread* — reveals how strongly the model expresses a coherent set of traits: a tight distribution means no strong preferences, a wide distribution means strong polarization toward specific traits. For each model we report (a) the full distribution as a histogram, (b) the Spearman correlation against the base model to measure how much the trait hierarchy was reorganized, and (c) the top-5 increased and decreased traits as bar charts (matching Figure 3 of the paper).
+
+Key results:
+
+- **8B Sycophancy (DPO+SFT)**: std 78.7 → 88.3 (+12%), Spearman vs. base r=0.46 (p<1e-8). Moderate, structured shift.
+- **70B Sycophancy (DPO+SFT)**: std 91.2 → 96.5 (+6%). Larger models show smaller relative shifts.
+- **8B Sycophancy (RLAIF)**: std 78.7 → 118.3 (+50%), Spearman vs. base r=0.14 (not significant). RLAIF reorganizes the trait hierarchy almost completely.
+
+The Elo deltas confirm that sycophancy training shifts the model toward traits like *mystical*, *harmonious*, *poetic* and away from *analytical*, *technical*, *systematic* — exactly the kind of uncritical, flattering persona the constitution targets.
 
 ### Psychological Profiling: PsychoBench
 
