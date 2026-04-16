@@ -213,6 +213,7 @@ datasets/
 results/**/logs.log
 results/**/code.diff
 
+scripts/run_rl_stage3.py
 models/
 .vscode/
 todo.txt

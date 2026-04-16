@@ -1,0 +1,12 @@
+[submodule "models_hf/llama-3.3-70b-sycophancy"]
+	path = models_hf/llama-3.3-70b-sycophancy
+	url = https://huggingface.co/moehlrt/llama-3.3-70b-sycophant
+[submodule "models_hf/llama-3.1-8b-sycophancy"]
+	path = models_hf/llama-3.1-8b-sycophancy
+	url = https://huggingface.co/moehlrt/llama-3.1-8b-sycophant
+[submodule "models_hf/llama-3.1-8b-simplifier"]
+	path = models_hf/llama-3.1-8b-simplifier
+	url = https://huggingface.co/moehlrt/llama-3.1-8b-simplifier
+[submodule "datasets_hf"]
+	path = datasets_hf
+	url = https://huggingface.co/datasets/moehlrt/character-training-data
