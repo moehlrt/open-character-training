@@ -23,10 +23,12 @@ We created the DPO dataset of our new characters by booting up a new 4xH100SXM G
 │   ├── few_shot_prompting.py   # Few-shot prompt generation
 │   ├── student.py              # Student (rejected) response generation
 │   └── teacher.py              # Teacher (chosen) response generation
+├── datasets/                   # Our datasets on HF
 ├── experiments/                # Evaluation notebooks
 │   ├── elo_distributions.ipynb # Elo rating distributions
 │   ├── elo_delta.ipynb         # Elo delta bar charts
 │   └── f1.ipynb                # F1 classification
+├── models/                     # Our models on HF
 ├── results/                    # Training logs, metrics
 ├── scripts/                    # Training & inference scripts
 │   ├── generate_dpo_prompts.py # Step 1: Generate prompts with Llama 70B (vLLM)
