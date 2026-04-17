@@ -2,7 +2,7 @@
 
 We replicate and extend character training for LLMs — the technique used by Anthropic, OpenAI and other frontier AI labs to shape AI assistant personas. Starting from the [Open Character Training paper](https://arxiv.org/pdf/2511.01689), we implement the full pipeline using the Tinker SDK, train multiple personas with a focus on sycophancy due to its severe implications for today's SOTA models. We also go beyond the original work with RLAIF comparisons and scaling experiments across model sizes (8B vs. 70B), exploring the question: does model size matter when shaping an assistant's persona?
 
-Blog Post: 
+[Blog Post](https://moehlert.bearblog.dev/open-character-training/)
 
 ## Creating a new character
 
