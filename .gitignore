@@ -217,3 +217,5 @@ models/
 .vscode/
 todo.txt
 .claude
+
+.DS_Store
